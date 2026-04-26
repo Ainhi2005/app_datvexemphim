@@ -16,9 +16,16 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const TicketScreen(), // Tạo sau
+    const TicketScreen(),
     const MovieScreen(),
-    const ProfileScreen(), // Tạo sau
+    const ProfileScreen(),
+  ];
+
+  final List<NavItem> _navItems = const [
+    NavItem(Icons.home, 'Trang chủ'),
+    NavItem(Icons.confirmation_num_outlined, 'Vé'),
+    NavItem(Icons.movie_outlined, 'Phim'),
+    NavItem(Icons.person_outline, 'Hồ sơ'),
   ];
 
   @override
@@ -26,54 +33,52 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: _screens[_currentIndex],
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildNavItem(Icons.home, 'Trang chủ', 0),
-              _buildNavItem(Icons.confirmation_num_outlined, 'Vé', 1),
-              _buildNavItem(Icons.movie_outlined, 'Phim', 2),
-              _buildNavItem(Icons.person_outline, 'Hồ sơ', 3),
-            ],
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(
+            _navItems.length,
+                (index) => _buildNavItem(_navItems[index], index),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
+  Widget _buildNavItem(NavItem item, int index) {
     final isSelected = _currentIndex == index;
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
+      onTap: () => setState(() => _currentIndex = index),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            icon,
+            item.icon,
             color: isSelected ? AppColors.secondary : AppColors.textSecondary,
             size: 30,
           ),
           const SizedBox(height: 4),
           Text(
-            label,
+            item.label,
             style: AppTextStyles.bodyMedium.copyWith(
               color: isSelected ? AppColors.secondary : AppColors.textSecondary,
               fontSize: 11,
@@ -85,15 +90,20 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-// Tạm thời tạo các screen rỗng
+class NavItem {
+  final IconData icon;
+  final String label;
+  const NavItem(this.icon, this.label);
+}
+
+// Temporary screens
 class TicketScreen extends StatelessWidget {
   const TicketScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(
+      body: const Center(
         child: Text('Ticket Screen', style: TextStyle(color: Colors.white)),
       ),
     );
@@ -102,12 +112,11 @@ class TicketScreen extends StatelessWidget {
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(
+      body: const Center(
         child: Text('Profile Screen', style: TextStyle(color: Colors.white)),
       ),
     );
