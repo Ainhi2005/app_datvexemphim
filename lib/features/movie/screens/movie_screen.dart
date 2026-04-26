@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/movie_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../data/models/movie_detail.dart';
+import '../../../data/models/movie.dart';  // ĐỔI từ movie_detail sang movie
 
 class MovieScreen extends StatefulWidget {
   const MovieScreen({super.key});
@@ -35,6 +35,24 @@ class _MovieScreenState extends State<MovieScreen> {
             if (provider.isLoading) {
               return const Center(
                 child: CircularProgressIndicator(color: AppColors.secondary),
+              );
+            }
+
+            if (provider.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text('Lỗi: ${provider.error}', style: AppTextStyles.bodyLarge),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => provider.fetchMovies(),
+                      child: const Text('Thử lại'),
+                    ),
+                  ],
+                ),
               );
             }
 
@@ -74,7 +92,7 @@ class _MovieScreenState extends State<MovieScreen> {
                                         ? Colors.white
                                         : Colors.white70,
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 20,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ),
@@ -104,7 +122,7 @@ class _MovieScreenState extends State<MovieScreen> {
                                         ? Colors.white
                                         : Colors.white70,
                                     fontWeight: FontWeight.w600,
-                                      fontSize: 20,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ),
@@ -130,12 +148,18 @@ class _MovieScreenState extends State<MovieScreen> {
   }
 
   // Grid cho Now playing (2 cột, card dọc)
-  Widget _buildNowPlayingGrid(List<MovieDetail> movies) {
+  Widget _buildNowPlayingGrid(List<Movie> movies) {  // ĐỔI sang Movie
+    if (movies.isEmpty) {
+      return const Center(
+        child: Text('Không có phim đang chiếu', style: TextStyle(color: Colors.white70)),
+      );
+    }
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // 2 cột
-        childAspectRatio: 0.56, // Tỉ lệ chiều cao/rộng (card dọc)
+        crossAxisCount: 2,
+        childAspectRatio: 0.60,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
@@ -148,12 +172,18 @@ class _MovieScreenState extends State<MovieScreen> {
   }
 
   // Grid cho Coming soon (2 cột, card dọc)
-  Widget _buildComingSoonGrid(List<MovieDetail> movies) {
+  Widget _buildComingSoonGrid(List<Movie> movies) {  // ĐỔI sang Movie
+    if (movies.isEmpty) {
+      return const Center(
+        child: Text('Không có phim sắp chiếu', style: TextStyle(color: Colors.white70)),
+      );
+    }
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // 2 cột
-        childAspectRatio: 0.56,
+        crossAxisCount: 2,
+        childAspectRatio: 0.58,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
@@ -166,7 +196,7 @@ class _MovieScreenState extends State<MovieScreen> {
   }
 
   // Card phim dạng dọc (cho grid)
-  Widget _buildMovieVerticalCard(MovieDetail movie, {required bool isNowPlaying}) {
+  Widget _buildMovieVerticalCard(Movie movie, {required bool isNowPlaying}) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardColor,
@@ -179,7 +209,7 @@ class _MovieScreenState extends State<MovieScreen> {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: Image.network(
-              movie.imageUrl,
+              movie.posterUrl,
               height: 180,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -196,26 +226,15 @@ class _MovieScreenState extends State<MovieScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Hero name (SHANG-CHI)
-                Text(
-                  movie.heroName,
-                  style: const TextStyle(
-                    color: Color(0xFFE94560),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                // Hero name (lấy từ title)
                 const SizedBox(height: 4),
                 // Title
                 Text(
                   movie.title,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFFFD700),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -230,7 +249,7 @@ class _MovieScreenState extends State<MovieScreen> {
                       Text(
                         '${movie.rating} (${movie.reviewCount})',
                         style: const TextStyle(
-                          color: Color(0xFFFFD700),
+                          color: Colors.white,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -243,7 +262,7 @@ class _MovieScreenState extends State<MovieScreen> {
                       const Icon(Icons.calendar_today, size: 12, color: Colors.white70),
                       const SizedBox(width: 4),
                       Text(
-                        movie.releaseDate,
+                        movie.formattedReleaseDate,
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 11,
@@ -258,7 +277,7 @@ class _MovieScreenState extends State<MovieScreen> {
                     const Icon(Icons.access_time, size: 12, color: Colors.white54),
                     const SizedBox(width: 4),
                     Text(
-                      movie.duration,
+                      movie.formattedDuration,
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 10,
@@ -269,7 +288,7 @@ class _MovieScreenState extends State<MovieScreen> {
                 const SizedBox(height: 4),
                 // Genre
                 Text(
-                  movie.genre,
+                  movie.formattedGenres,
                   style: const TextStyle(
                     color: Colors.white54,
                     fontSize: 10,

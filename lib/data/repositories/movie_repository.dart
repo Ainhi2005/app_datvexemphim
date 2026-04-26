@@ -1,11 +1,21 @@
 import '../models/movie.dart';
-import '../models/news_item.dart';
-import '../services/mock_api_service.dart';
+import '../services/movie_api_service.dart';  // ĐỔI từ mock_api_service
 
 class MovieRepository {
-  final MockApiService _apiService = MockApiService();
+  final MovieApiService _apiService = MovieApiService();  // Dùng API thật
 
-  Future<List<Movie>> getNowPlaying() => _apiService.getNowPlayingMovies();
-  Future<List<Movie>> getComingSoon() => _apiService.getComingSoonMovies();
-  Future<List<NewsItem>> getNews() => _apiService.getMovieNews();
+  Future<List<Movie>> getNowPlaying() async {
+    return await _apiService.getNowShowingMovies();
+  }
+
+  Future<List<Movie>> getComingSoon() async {
+    return await _apiService.getComingSoonMovies();
+  }
+
+  // Thêm hàm lấy tất cả phim (dùng cho news)
+  Future<List<Movie>> getAllMovies() async {
+    return await _apiService.getAllMovies();
+  }
+
+// XÓA hàm getNews() - không dùng nữa
 }

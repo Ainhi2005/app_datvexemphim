@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import '../../../data/models/movie_detail.dart';
-import '../../../data/services/mock_movie_service.dart';
+import '../../../data/models/movie.dart';  // ĐỔI sang movie
+import '../../../data/services/movie_api_service.dart';  // Dùng API service
 
 class MovieProvider extends ChangeNotifier {
-  final MockMovieService _service = MockMovieService();
+  final MovieApiService _service = MovieApiService();  // ĐỔI từ MockMovieService
 
-  List<MovieDetail> _nowPlayingMovies = [];
-  List<MovieDetail> _comingSoonMovies = [];
+  List<Movie> _nowPlayingMovies = [];
+  List<Movie> _comingSoonMovies = [];
   bool _isLoading = true;
+  String? _error;
 
-  List<MovieDetail> get nowPlayingMovies => _nowPlayingMovies;
-  List<MovieDetail> get comingSoonMovies => _comingSoonMovies;
+  List<Movie> get nowPlayingMovies => _nowPlayingMovies;
+  List<Movie> get comingSoonMovies => _comingSoonMovies;
   bool get isLoading => _isLoading;
+  String? get error => _error;
 
   MovieProvider() {
     fetchMovies();
@@ -19,24 +21,26 @@ class MovieProvider extends ChangeNotifier {
 
   Future<void> fetchMovies() async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
-    final allMovies = await _service.getMovies();
+    try {
+      // Gọi API thật
+      final results = await Future.wait([
+        _service.getNowShowingMovies(),
+        _service.getComingSoonMovies(),
+      ]);
 
-    // Tách thành 2 danh sách: Now playing và Coming soon
-    _nowPlayingMovies = allMovies.where((m) =>
-    m.releaseDate != '20.12.2022' &&
-        m.releaseDate != '25.12.2022' &&
-        m.releaseDate != 'MARCH 17'
-    ).take(6).toList();
+      _nowPlayingMovies = results[0];
+      _comingSoonMovies = results[1];
 
-    _comingSoonMovies = allMovies.where((m) =>
-    m.releaseDate == '20.12.2022' ||
-        m.releaseDate == '25.12.2022' ||
-        m.releaseDate == 'MARCH 17'
-    ).toList();
-
-    _isLoading = false;
-    notifyListeners();
+      print('✅ Loaded: ${_nowPlayingMovies.length} now playing, ${_comingSoonMovies.length} coming soon');
+    } catch (e) {
+      _error = e.toString();
+      print('❌ Error: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

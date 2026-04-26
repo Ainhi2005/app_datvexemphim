@@ -92,11 +92,13 @@ class MovieCard extends StatelessWidget {
                     children: [
                       Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
-                      Text(movie.duration, style: AppTextStyles.bodyMedium),
+                      // SỬA: dùng formattedDuration (String)
+                      Text(movie.formattedDuration, style: AppTextStyles.bodyMedium),
                       const SizedBox(width: 12),
                       Icon(Icons.category, size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
-                      Text(movie.genre, style: AppTextStyles.bodyMedium),
+                      // SỬA: dùng formattedGenres (String)
+                      Text(movie.formattedGenres, style: AppTextStyles.bodyMedium),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -145,13 +147,15 @@ class MovieCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            Text(movie.genre, style: AppTextStyles.bodyMedium, maxLines: 1),
+            // SỬA: dùng formattedGenres
+            Text(movie.formattedGenres, style: AppTextStyles.bodyMedium, maxLines: 1),
             const SizedBox(height: 4),
             Row(
               children: [
                 const Icon(Icons.calendar_today, size: 10, color: AppColors.textSecondary),
                 const SizedBox(width: 4),
-                Text(movie.releaseDate ?? '', style: AppTextStyles.bodyMedium.copyWith(fontSize: 10)),
+                // SỬA: dùng formattedReleaseDate (String)
+                Text(movie.formattedReleaseDate, style: AppTextStyles.bodyMedium.copyWith(fontSize: 10)),
               ],
             ),
           ],
