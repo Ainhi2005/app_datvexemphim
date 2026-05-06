@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+/// Định nghĩa bảng màu chính cho toàn bộ ứng dụng.
+/// Dùng ở mọi nơi: theme, button, background, text,...
 class AppColors {
   static const Color primary = Color(0xFF1A1A2E);
   static const Color secondary = Color(0xFFFFD700);

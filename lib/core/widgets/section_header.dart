@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-
+/// Header cho mỗi section (danh sách phim, tin tức,...).
+/// Có thể tái sử dụng ở mọi màn hình có cấu trúc title + see all.
 class SectionHeader extends StatelessWidget {
   final String title;
   final VoidCallback? onSeeAll;

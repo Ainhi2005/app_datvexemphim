@@ -3,7 +3,25 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../home/screens/home_screen.dart';
 import '../../movie/screens/movie_screen.dart';
-
+// ================================================================
+// MAIN SCREEN - Nơi quản lý Bottom Navigation Bar CỐ ĐỊNH
+// ================================================================
+// MỤC ĐÍCH:
+//   - Quản lý 4 màn hình chính (Trang chủ, Vé, Phim, Hồ sơ)
+//   - Bottom navigation bar CỐ ĐỊNH ở dưới, không bị cuốn khi scroll
+//   - Chuyển đổi giữa các màn hình mà KHÔNG cần reload lại toàn bộ
+// ================================================================
+// CÁCH HOẠT ĐỘNG:
+//   1. Người dùng nhấn vào icon trên bottom bar
+//   2. _currentIndex thay đổi (0,1,2,3)
+//   3. Scaffold hiển thị widget tương ứng trong _screens[_currentIndex]
+//   4. Bottom bar vẫn giữ nguyên, không thay đổi
+// ================================================================
+// LƯU Ý QUAN TRỌNG:
+//   - Các màn hình con (HomeScreen, MovieScreen) KHÔNG có bottom nav riêng
+//   - Tất cả bottom nav đều tập trung tại file NÀY
+//   - Khi thêm màn hình mới, chỉ cần thêm vào _screens và _navItems
+// ================================================================
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 

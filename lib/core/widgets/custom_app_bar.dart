@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-
+/// AppBar tùy chỉnh dùng chung cho nhiều màn hình.
+/// Tự động thêm avatar nếu không truyền actions.
+/// Có thể mở rộng: thêm leading, title widget tùy chỉnh.
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;

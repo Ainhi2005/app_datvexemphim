@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-
+/// Cấu hình theme chính cho toàn bộ ứng dụng.
+/// Hiện tại hỗ trợ dark theme, có thể mở rộng thêm light theme.
 class AppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
