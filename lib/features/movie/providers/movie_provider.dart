@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../data/models/movie.dart';  // ĐỔI sang movie
 import '../../../data/services/movie_api_service.dart';  // Dùng API service
 

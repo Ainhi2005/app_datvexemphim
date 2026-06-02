@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/movie_provider.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/error_view.dart';
 import '../widgets/movie_grid.dart';
@@ -25,7 +26,7 @@ class _MovieScreenState extends State<MovieScreen> {
         appBar: AppBar(
           title: const Text(
             'Movies',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
+            style: AppTextStyles.headlineMedium,
           ),
           centerTitle: false,
           backgroundColor: Colors.transparent,
@@ -79,8 +80,8 @@ class _MovieScreenState extends State<MovieScreen> {
                   child: Center(
                     child: Text(
                       'Now playing',
-                      style: TextStyle(
-                        color: _selectedTab == 0 ? Colors.white : Colors.white70,
+                      style: AppTextStyles.button.copyWith(
+                        color: _selectedTab == 0 ? AppColors.textButton : AppColors.textSecondary,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
@@ -101,8 +102,8 @@ class _MovieScreenState extends State<MovieScreen> {
                   child: Center(
                     child: Text(
                       'Coming soon',
-                      style: TextStyle(
-                        color: _selectedTab == 1 ? Colors.white : Colors.white70,
+                      style: AppTextStyles.button.copyWith(
+                        color: _selectedTab == 1 ? AppColors.textButton : AppColors.textSecondary,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),

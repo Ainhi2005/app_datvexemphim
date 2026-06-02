@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-/// AppBar tùy chỉnh dùng chung cho nhiều màn hình.
-/// Tự động thêm avatar nếu không truyền actions.
-/// Có thể mở rộng: thêm leading, title widget tùy chỉnh.
+import '../../features/profile/providers/profile_provider.dart';
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
@@ -23,14 +23,23 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       actions: actions ??
           [
-            Container(
-              margin: const EdgeInsets.only(right: 16),
-              child: const CircleAvatar(
-                radius: 20,
-                backgroundImage: NetworkImage(
-                  'https://randomuser.me/api/portraits/women/68.jpg',
-                ),
-              ),
+            Consumer<ProfileProvider>(
+              builder: (context, profileProvider, child) {
+                final user = profileProvider.user;
+                return Container(
+                  margin: const EdgeInsets.only(right: 16),
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: AppColors.surface,
+                    backgroundImage: user?.avatarUrl != null
+                        ? NetworkImage(user!.avatarUrl!)
+                        : null,
+                    child: user?.avatarUrl == null
+                        ? const Icon(Icons.person, size: 20, color: AppColors.textSecondary)
+                        : null,
+                  ),
+                );
+              },
             ),
           ],
     );

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
 class MovieTabBar extends StatelessWidget {
@@ -23,8 +23,8 @@ class MovieTabBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _buildTabItem('Now playing', 0),
-            _buildTabItem('Coming soon', 1),
+            _buildTabItem('Đang chiếu', 0),
+            _buildTabItem('Sắp chiếu', 1),
           ],
         ),
       ),

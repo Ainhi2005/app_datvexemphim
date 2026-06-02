@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../data/repositories/movie_repository.dart';
 import '../../../data/models/movie.dart';
 

@@ -19,23 +19,24 @@ class MovieGrid extends StatelessWidget {
       return Center(
         child: Text(
           isNowPlaying ? 'Không có phim đang chiếu' : 'Không có phim sắp chiếu',
-          style: const TextStyle(color: Colors.white70),
+          style: AppTextStyles.bodyLarge.copyWith(
+            color: AppColors.textSecondary,
+          ),
         ),
       );
     }
 
     return GridView.builder(
       padding: const EdgeInsets.all(16),
+      itemCount: movies.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.60,
+        childAspectRatio: 0.58,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
-      itemCount: movies.length,
       itemBuilder: (context, index) {
-        final movie = movies[index];
-        return _buildMovieCard(movie, isNowPlaying);
+        return _buildMovieCard(movies[index], isNowPlaying);
       },
     );
   }
@@ -45,98 +46,126 @@ class MovieGrid extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Ảnh phim
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: Image.network(
-              movie.posterUrl,
-              height: 200,
+          // ==========================
+          // POSTER
+          // ==========================
+          Expanded(
+            flex: 7,
+            child: SizedBox(
               width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                height: 200,
-                color: AppColors.primary,
-                child: const Icon(Icons.movie, size: 50, color: Colors.grey),
+              child: Image.network(
+                movie.posterUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) {
+                  return Container(
+                    color: AppColors.primary,
+                    child: const Center(
+                      child: Icon(
+                        Icons.movie,
+                        size: 50,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
-          // Nội dung
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Tên phim
-                Text(
-                  movie.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                // Thời lượng và thể loại
-                Row(
-                  children: [
-                    Text(
-                      movie.formattedDuration,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
+
+          // ==========================
+          // CONTENT
+          // ==========================
+          Expanded(
+            flex: 4,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // TÊN PHIM
+                  Text(
+                    movie.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.titleSmall.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      height: 1.3,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        movie.formattedGenres,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Rating hoặc Release date
-                if (isNowPlaying)
-                  Row(
-                    children: [
-                      const Icon(Icons.star, size: 14, color: Color(0xFFFFD700)),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${movie.rating} (${movie.reviewCount})',
-                        style: const TextStyle(
-                          color: Color(0xFFFFD700),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today, size: 12, color: Colors.white70),
-                      const SizedBox(width: 4),
-                      Text(
-                        movie.formattedReleaseDate,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
                   ),
-              ],
+
+                  const SizedBox(height: 6),
+
+                  // THỜI LƯỢNG + THỂ LOẠI
+                  Text(
+                    '${movie.formattedDuration} • ${movie.formattedGenres}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  if (isNowPlaying)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 16,
+                          color: AppColors.rating,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '${movie.rating} (${movie.reviewCount})',
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.rating,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today_rounded,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            movie.formattedReleaseDate,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
         ],

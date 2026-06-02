@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/section_header.dart';
@@ -12,6 +13,7 @@ import '../widgets/search_bar.dart';
 import '../widgets/news_section.dart';
 import '../../movie/screens/movie_screen.dart';
 import '../../../data/models/movie.dart';
+import '../../profile/providers/profile_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -23,15 +25,30 @@ class HomeScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Trang Chủ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
+          title: const Text('Trang Chủ', style: AppTextStyles.headlineMedium),
           centerTitle: false,
           actions: [
-            Container(
-              margin: const EdgeInsets.only(right: 16),
-              child: const CircleAvatar(
-                radius: 20,
-                backgroundImage: NetworkImage('https://randomuser.me/api/portraits/women/68.jpg'),
-              ),
+            Consumer<ProfileProvider>(
+              builder: (context, profileProvider, child) {
+                final user = profileProvider.user;
+                return Container(
+                  margin: const EdgeInsets.only(right: 16),
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: AppColors.surface,
+                    backgroundImage: user?.avatarUrl != null
+                        ? NetworkImage(user!.avatarUrl!)
+                        : null,
+                    child: user?.avatarUrl == null
+                        ? const Icon(
+                            Icons.person,
+                            size: 20,
+                            color: AppColors.textSecondary,
+                          )
+                        : null,
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -39,7 +56,10 @@ class HomeScreen extends StatelessWidget {
           builder: (context, provider, child) {
             if (provider.isLoading) return const LoadingIndicator();
             if (provider.error != null) {
-              return ErrorView(message: provider.error!, onRetry: provider.fetchHomeData);
+              return ErrorView(
+                message: provider.error!,
+                onRetry: provider.fetchHomeData,
+              );
             }
 
             return SingleChildScrollView(
@@ -71,7 +91,7 @@ class HomeScreen extends StatelessWidget {
     return Column(
       children: [
         SectionHeader(
-          title: 'Now playing',
+          title: 'Đang chiếu',
           onSeeAll: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const MovieScreen()),

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../home/screens/home_screen.dart';
 import '../../movie/screens/movie_screen.dart';
+import '../../profile/screens/profile_screen.dart'; 
+import '../../profile/providers/profile_provider.dart';
+
 // ================================================================
 // MAIN SCREEN - Nơi quản lý Bottom Navigation Bar CỐ ĐỊNH
 // ================================================================
@@ -45,6 +49,14 @@ class _MainScreenState extends State<MainScreen> {
     NavItem(Icons.movie_outlined, 'Phim'),
     NavItem(Icons.person_outline, 'Hồ sơ'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileProvider>().fetchProfile();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,20 +134,7 @@ class TicketScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: const Center(
-        child: Text('Ticket Screen', style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-}
-
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: const Center(
-        child: Text('Profile Screen', style: TextStyle(color: Colors.white)),
+        child: Text('Ticket Screen', style: AppTextStyles.headlineMedium),
       ),
     );
   }

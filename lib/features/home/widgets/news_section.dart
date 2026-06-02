@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/news_card.dart';
 import '../../../data/models/movie.dart';

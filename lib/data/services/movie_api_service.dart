@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+﻿import 'package:dio/dio.dart';
 import '../models/movie.dart';
 import '../../core/constants/api_constants.dart';
 

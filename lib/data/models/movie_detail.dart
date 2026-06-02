@@ -1,4 +1,4 @@
-class MovieDetail {
+﻿class MovieDetail {
   final String id;
   final String title;
   final String heroName;

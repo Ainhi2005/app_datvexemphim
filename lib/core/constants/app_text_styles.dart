@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'app_colors.dart';
-/// Hệ thống text style đồng nhất cho toàn bộ ứng dụng.
-/// Tránh hardcode font size, weight ở nhiều nơi.
-/// Có thể mở rộng thêm các style như caption, overline,...
+
 class AppTextStyles {
   static const TextStyle headlineLarge = TextStyle(
     fontSize: 32,

@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-/// View hiển thị lỗi dùng chung.
-/// Có thể tái sử dụng ở bất kỳ màn hình nào cần hiển thị lỗi + nút thử lại.
+
 class ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
