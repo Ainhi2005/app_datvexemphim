@@ -17,6 +17,23 @@ class MovieApiService {
     ));
   }
 
+  Future<Map<String, dynamic>> getMovieRatingStats(int movieId) async {
+    try {
+      final response = await _dio.get('${ApiConstants.movies}/$movieId/ratings');
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final meta = response.data['meta'];
+        return {
+          'averageScore': (meta['averageScore'] ?? 0.0).toDouble(),
+          'totalRatings': meta['totalRatings'] ?? 0,
+        };
+      }
+      return {'averageScore': 0.0, 'totalRatings': 0};
+    } catch (e) {
+      print('❌ API Ratings Error: $e');
+      return {'averageScore': 0.0, 'totalRatings': 0};
+    }
+  }
+
   Future<List<Movie>> getMoviesByStatus(String? status) async {
     try {
       final Map<String, dynamic> queryParams = status != null ? {'status': status} : {};
@@ -66,5 +83,52 @@ class MovieApiService {
 
   Future<List<Movie>> getAllMovies() async {
     return await getMoviesByStatus(null);
+  }
+
+  // =========================================================================
+  // 💡 VIẾT THÊM: Hàm gọi API lấy danh sách Suất chiếu (Showtimes) theo ID Phim
+  // =========================================================================
+  Future<dynamic> getShowtimes(int movieId) async {
+    try {
+      // Thực hiện bắn lệnh GET request lên endpoint: /showtimes?movieId=3
+      final response = await _dio.get(
+        '/showtimes',
+        queryParameters: {
+          'movieId': movieId, // Truyền tham số lọc theo đúng cấu trúc Postman
+        },
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        // Trả về thẳng cục dữ liệu Map/Json thô để tầng Repository bóc tách đa tầng
+        return response.data;
+      }
+      
+      return null;
+    } catch (e) {
+      print('❌ Lỗi kết nối API tại hàm getShowtimes: $e');
+      // Ném lỗi hoặc trả về null để luồng Repository xử lý fallback mảng rỗng
+      return null; 
+    }
+  }
+  /// Lấy danh sách tất cả rạp phim
+  Future<dynamic> getCinemasList() async {
+    try {
+      final response = await _dio.get('/cinemas'); 
+      return response.data;
+    } catch (e) {
+      print('❌ Lỗi getCinemasList: $e');
+      rethrow;
+    }
+  }
+
+  /// 💡 THÊM HÀM NÀY: Khớp chính xác với ảnh Postman mới của bạn
+  Future<dynamic> getRoomsByCinema(int cinemaId) async {
+    try {
+      final response = await _dio.get('/cinemas/$cinemaId/rooms');
+      return response.data;
+    } catch (e) {
+      print('❌ Lỗi getRoomsByCinema cho rạp ID $cinemaId: $e');
+      rethrow;
+    }
   }
 }
