@@ -1,68 +1,120 @@
 // lib/data/repositories/booking_repository.dart
 
+import 'package:dio/dio.dart';
 import '../models/seat.dart';
-import '../services/booking_api_service.dart';
+import '../../core/constants/api_constants.dart';
+import '../models/showtime.dart';
 
 class BookingRepository {
-  final BookingApiService _apiService = BookingApiService();
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: ApiConstants.baseUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    ),
+  );
 
-  Future<List<Seat>> getSeats(int roomId) async {
+  /// Lấy sơ đồ ghế đầy đủ kèm trạng thái đặt động
+  /// Lấy sơ đồ ghế đầy đủ kèm trạng thái đặt động
+  /// Lấy sơ đồ ghế đầy đủ từ cấu trúc seatMap của Backend
+  Future<List<Seat>> getSeats(Showtime showtime) async {
     try {
-      final response = await _apiService.getSeatsByRoom(roomId);
+      print('🔍 [START] Fetching seat map for Room ID: ${showtime.roomId}, Showtime ID: ${showtime.id}');
       
-      if (response.statusCode == 200) {
-        final responseData = response.data;
-        List<Seat> flattenSeatsList = [];
+      // 1. Gọi API song song lấy thông tin sơ đồ ghế và vé đã bán
+      final responses = await Future.wait([
+        _dio.get('/rooms/${showtime.roomId}/seats'),
+        _dio.get('/showtimes/${showtime.id}'),
+      ]);
 
-        // 💡 KHỚP 100% VỚI JSON MỚI: Bóc trích object 'data' -> 'seatMap'
-        if (responseData != null && responseData['success'] == true) {
-          final dataObject = responseData['data'];
-          if (dataObject != null && dataObject['seatMap'] is Map) {
-            final Map<String, dynamic> seatMap = dataObject['seatMap'];
+      List<int> reservedSeatIds = [];
+      
+      // 2. BÓC TÁCH GHẾ ĐÃ ĐẶT (Giữ nguyên luồng an toàn trước đó)
+      if (responses[1].statusCode == 200 && responses[1].data != null) {
+        final res1Data = responses[1].data;
+        final showtimeDetail = res1Data is Map && res1Data.containsKey('data') ? res1Data['data'] : res1Data;
 
-            // Duyệt qua từng hàng ghế ("A", "B", "C", "D"...)
-            seatMap.forEach((rowName, seatsInRow) {
-              if (seatsInRow is List) {
-                for (var element in seatsInRow) {
-                  final seatJson = element as Map<String, dynamic>;
-                  
-                  // Lấy mã nhãn ghế (Ví dụ: "A1", "B10")
-                  final String seatLabel = seatJson['label'] ?? '';
-
-                  // Kiểm tra xem ghế có hoạt động và có bị khóa hay không
-                  // JSON hiện tại chưa có trường isReserved, ta phòng vệ qua trạng thái isActive
-                  final bool isSeatActive = seatJson['isActive'] ?? true;
-
-                  flattenSeatsList.add(
-                    Seat(
-                      id: seatLabel, // Khớp với String id của Model bạn
-                      // Ép kiểu giá tiền an toàn (Nếu JSON BE thiếu trường price, lấy giá mặc định 80000 VND)
-                      price: (seatJson['price'] ?? 80000 as num).toDouble(),
-                      status: !isSeatActive 
-                          ? SeatStatus.reserved 
-                          : SeatStatus.available,
-                      type: _mapType(seatJson['type'] ?? 'NORMAL'),
-                    ),
-                  );
-                }
-              }
-            });
+        if (showtimeDetail != null && showtimeDetail is Map) {
+          var bSeatsData = showtimeDetail['booking_seats'] ?? showtimeDetail['bookingSeats'];
+          if (bSeatsData is Map && bSeatsData.containsKey('data')) {
+            bSeatsData = bSeatsData['data'];
+          }
+          if (bSeatsData is List) {
+            reservedSeatIds = bSeatsData.map((bs) => (bs['seat_id'] ?? bs['seatId'] ?? 0) as int).toList();
+            print('✅ Found ${reservedSeatIds.length} reserved seat IDs.');
           }
         }
-        
-        print("🎯 [Repo] Đã bóc tách thành công ${flattenSeatsList.length} ghế về danh sách phẳng.");
-        return flattenSeatsList;
       }
+
+      // 3. BÓC TÁCH CẤU TRÚC "seatMap" ĐA TẦNG TỪ POSTMAN
+      List<Seat> finalSeatsList = [];
+
+      if (responses[0].statusCode == 200 && responses[0].data != null) {
+        final res0Data = responses[0].data;
+        
+        if (res0Data is Map && res0Data['success'] == true && res0Data['data'] != null) {
+          final dataBlock = res0Data['data'];
+          
+          if (dataBlock is Map && dataBlock.containsKey('seatMap')) {
+            final dynamic seatMapJson = dataBlock['seatMap'];
+            
+            if (seatMapJson is Map) {
+              final priceConfig = {
+                'basePrice': showtime.basePrice,
+                'vipPrice': showtime.vipPrice,
+                'couplePrice': showtime.couplePrice,
+              };
+
+              // Duyệt qua từng hàng ghế ("A", "B", "C"...) bên trong đối tượng seatMap
+              seatMapJson.forEach((rowKey, seatsInRow) {
+                if (seatsInRow is List) {
+                  for (var seatJson in seatsInRow) {
+                    final Map<String, dynamic> seatMapCast = Map<String, dynamic>.from(seatJson);
+                    
+                    // 💡 ĐIỀU KIỆN LỌC CHÍ MẠNG: Chỉ lấy những ghế có isActive == true
+                    if (seatMapCast['isActive'] == true) {
+                      final Seat parsedSeat = Seat.fromJson(seatMapCast, priceConfig, reservedSeatIds);
+                      finalSeatsList.add(parsedSeat);
+                    }
+                  }
+                }
+              });
+            }
+          }
+        }
+      }
+
+      print('📊 Tổng số ghế hợp lệ bóc tách thành công để đưa lên UI: ${finalSeatsList.length} ghế.');
+      return finalSeatsList;
+      
     } catch (e) {
-      print("❌ [BookingRepository Error] Lỗi bóc tách cấu trúc seatMap: $e");
+      print('❌ Lỗi xử lý bóc tách seatMap: $e');
+      return [];
     }
-    return [];
   }
 
-  SeatType _mapType(String type) {
-    final upperType = type.toUpperCase();
-    if (upperType == 'VIP') return SeatType.vip;
-    if (upperType == 'COUPLE') return SeatType.couple;
-    return SeatType.normal;
+  /// Gửi dữ liệu đặt vé giữ chỗ lên Backend
+  Future<bool> createBooking({
+    required int showtimeId,
+    required List<int> seatIds,
+    List<int>? comboIds, // Nếu bạn có tính năng chọn bắp nước đi kèm
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/bookings',
+        data: {
+          'showtimeId': showtimeId,
+          'seatIds': seatIds,
+          'combos': comboIds ?? [],
+        },
+      );
+
+      return response.statusCode == 201 || (response.data['success'] == true);
+    } catch (e) {
+      print('❌ Lỗi tạo dữ liệu đặt vé: $e');
+      return false;
+    }
   }
 }

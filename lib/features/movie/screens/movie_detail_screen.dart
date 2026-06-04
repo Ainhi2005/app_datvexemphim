@@ -1,3 +1,5 @@
+// lib/presentation/movie/screens/movie_detail_screen.dart
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
@@ -6,9 +8,11 @@ import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../data/models/movie.dart';
 import '../../../data/models/showtime.dart';
-import '../../../data/models/movie_detail.dart';
 import '../../movie/providers/movie_detail_provider.dart';
 import '../../../routes/app_routes.dart';
+import '../providers/showtime_provider.dart';
+import '../providers/rating_provider.dart'; // Nạp tầng xử lý đánh giá phim
+import '../../auth/providers/auth_provider.dart'; // Nạp tầng quản lý tài khoản để lấy token đăng nhập
 
 class MovieDetailScreen extends StatefulWidget {
   const MovieDetailScreen({super.key});
@@ -18,65 +22,190 @@ class MovieDetailScreen extends StatefulWidget {
 }
 
 class _MovieDetailScreenState extends State<MovieDetailScreen> {
-  bool _isDataLoaded = false;
+  bool _isMovieDataLoaded = false;
 
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
 
-    // CHUẨN HÓA DỮ LIỆU MOCK: Đổi id thành 3 để khớp chính xác movie_id trong DB phpMyAdmin
     final Movie movie = args is Movie
         ? args
         : Movie(
-       id: 3, // Bắt buộc giữ ID = 3 để gọi API lấy suất chiếu động
-          title: "Tên mới", // Khớp cột 'title' dưới DB của bạn
-          duration: 160, // Khớp cột 'duration' (160 phút)
-          genres: ["Hành động", "Phiêu lưu", "Khoa học viễn tưởng"], // Đầy đủ mảng thể loại
-          directors: ["Anthony Russo", "Joe Russo"], // Khớp mảng JSON đạo diễn
-          releaseDate: DateTime(2026, 04, 01), // Khớp 'release_date' (2026-04-01)
-          endDate: DateTime(2026, 06, 30), // Khớp 'end_date' (2026-06-30)
-          status: "now_showing",
-          posterUrl: "https://image.tmdb.org/t/p/original/7WsyChvRStvT0tO0Zwr0jYvjsPb.jpg", // Thay bằng link ảnh thật hiển thị cho đẹp mắt thay vì example.com bị lỗi
-          description: "Mô tả phim: Đây là siêu phẩm điện ảnh được đồng bộ dữ liệu trực tiếp từ hệ thống Backend Node.js và cơ sở dữ liệu MySQL. Trận chiến thế kỷ chuẩn bị bắt đầu!", 
-          ageRating: "T16", // Khớp cột 'age_rating'
-          language: "Vietsub / Lồng Tiếng", // Khớp cột 'language'
-          createdAt: DateTime.parse("2026-04-04 20:39:59"), // Khớp cột 'created_at'
-          cast: [
-            {
-              'name': 'Robert Downey Jr.',
-              'image': 'https://image.tmdb.org/t/p/original/1YjdSym1jTG7xjHSI0EERcA4nC.jpg',
-            },
-            {
-              'name': 'Chris Evans',
-              'image': 'https://image.tmdb.org/t/p/original/3bOGNsHlrswhyW79uvIHH1V43JI.jpg',
-            },
-            {
-              'name': 'Mark Ruffalo',
-              'image': 'https://image.tmdb.org/t/p/original/z3dvKqMNDQWk3QLxzumloQVR0L.jpg',
-            },
-          ],
+            id: 4,
+            title: "Godzilla x Kong: The New Empire",
+            duration: 115,
+            genres: ["Hành động", "Khoa học viễn tưởng"],
+            directors: ["Adam Wingard"],
+            releaseDate: DateTime.parse("2026-03-24T17:00:00.000Z"),
+            endDate: DateTime.parse("2026-06-14T17:00:00.000Z"),
+            status: "now_showing",
+            posterUrl:
+                "https://res.cloudinary.com/dacgrbxyn/image/upload/v1778338063/cinema-app/sd6sogl7oeiqphu6encg.jpg",
+            description:
+                "Cuộc chiến siêu kinh điển giữa các Titan cổ đại chống lại mối đe dọa tiềm ẩn sâu bên trong thế giới Trái Đất rỗng.",
+            ageRating: "T13",
+            language: "Vietsub",
+            createdAt: DateTime.parse("2026-04-17T03:50:43.000Z"),
           );
 
-    final provider = Provider.of<MovieDetailProvider>(context);
+    final movieDetailProvider = Provider.of<MovieDetailProvider>(context);
+    final showtimeProvider = Provider.of<ShowtimeProvider>(context);
+    final ratingProvider = Provider.of<RatingProvider>(context);
 
-    if (!_isDataLoaded) {
-      Future.microtask(() => provider.loadShowtimes(movie.id));
-      _isDataLoaded = true;
+    // Kích hoạt nạp thông tin mô tả bộ phim và danh sách rating động
+    if (!_isMovieDataLoaded) {
+      Future.microtask(() {
+        movieDetailProvider.loadMovieDetailData(movie.id);
+        ratingProvider.fetchRatings(movie.id);
+      });
+      _isMovieDataLoaded = true;
+    }
+
+    if (showtimeProvider.isLoading == false && showtimeProvider.allShowtimes.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showtimeProvider.fetchShowtimes(movie.id);
+      });
     }
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // 1. Poster Phim
+          // 1. Hiệu ứng Ảnh nền lớn phía sau (Blur)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: MediaQuery.of(context).size.height * 0.4,
+            height: MediaQuery.of(context).size.height * 0.45,
             child: movie.posterUrl.isNotEmpty
-                ? Image.network(movie.posterUrl, fit: BoxFit.cover)
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(movie.posterUrl, fit: BoxFit.cover),
+                      ClipRRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                          child: Container(
+                            color: Colors.black.withOpacity(0.4),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.transparent, AppColors.background],
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
                 : Container(color: Colors.grey[900]),
           ),
+
+          // 3. Khối nội dung cuộn chính
+          movieDetailProvider.isLoading
+              ? const Center(child: LoadingIndicator())
+              : SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).size.height * 0.12,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 170,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.network(
+                                  movie.posterUrl,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    movie.heroName,
+                                    style: AppTextStyles.titleSmall.copyWith(
+                                      color: AppColors.secondary,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    movie.title,
+                                    style: AppTextStyles.headlineMedium
+                                        .copyWith(fontSize: 22),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${movie.formattedDuration} • ${movie.formattedReleaseDate}',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Section hiển thị Điểm Đánh giá lấy động từ RatingProvider mới gộp bộ chọn sao tương tác
+                        MovieRatingSection(
+                          movieId: movie.id,
+                          averageScore: ratingProvider.averageScore,
+                          totalRatings: ratingProvider.totalRatings,
+                        ),
+                        const SizedBox(height: 24),
+
+                        MovieMetadataRow(movie: movie),
+                        const SizedBox(height: 24),
+
+                        MovieStorylineSection(movie: movie),
+                        const SizedBox(height: 24),
+
+                        HorizontalDirectorList(movie: movie),
+                        const SizedBox(height: 24),
+
+                        _buildSmartDateSelection(showtimeProvider),
+                        const SizedBox(height: 24),
+
+                        _buildBackendCinemaSelection(showtimeProvider),
+
+                        const SizedBox(height: 120),
+                      ],
+                    ),
+                  ),
+                ),
+
+          // 4. Thanh điều hướng đặt vé nổi dưới cùng màn hình
+          if (!movieDetailProvider.isLoading)
+            _buildContinueFloatingButton(showtimeProvider, movie),
 
           // 2. Nút Quay Lại (Back)
           Positioned(
@@ -84,7 +213,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
             left: 16,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withOpacity(0.4),
                 shape: BoxShape.circle,
               ),
               child: IconButton(
@@ -97,108 +226,17 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               ),
             ),
           ),
-
-          // 3. Khối nội dung cuộn
-          provider.isLoading
-              ? const Center(child: LoadingIndicator())
-              : SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height * 0.35,
-                  ),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(30),
-                      ),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 24,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          movie.heroName,
-                          style: AppTextStyles.titleSmall.copyWith(
-                            color: AppColors.secondary,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(movie.title, style: AppTextStyles.headlineMedium),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${movie.formattedDuration} • ${movie.formattedReleaseDate}',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        MovieRatingSection(movie: movie),
-                        const SizedBox(height: 20),
-
-                        MovieMetadataRow(movie: movie),
-                        const SizedBox(height: 24),
-
-                        MovieStorylineSection(movie: movie),
-                        const SizedBox(height: 24),
-
-                        HorizontalDirectorList(movie: movie),
-                        const SizedBox(height: 24),
-
-                        HorizontalActorList(movie: movie),
-                        const SizedBox(height: 24),
-
-                        // Thanh lịch chọn ngày thông minh
-                        _buildSmartDateSelection(provider),
-                        const SizedBox(height: 24),
-
-                        // Danh sách rạp & giờ chiếu từ Backend
-                        _buildBackendCinemaSelection(provider),
-
-                        const SizedBox(height: 100),
-                      ],
-                    ),
-                  ),
-                ),
-
-          // 4. Nút bấm Continue nổi
-          _buildContinueFloatingButton(provider, movie),
         ],
       ),
     );
   }
 
-  // THUẬT TOÁN QUÉT NGÀY CHIẾU THÔNG MINH
-  Widget _buildSmartDateSelection(MovieDetailProvider provider) {
-    // 💡 CẢI TIẾN CHÍ MẠNG: Nếu danh sách suất chiếu từ BE chưa tải xong,
-    // bắt UI dừng lại hiển thị một khoảng trống, không được tự ý lấy DateTime.now() làm lệch mốc!
+  Widget _buildSmartDateSelection(ShowtimeProvider provider) {
     if (provider.allShowtimes.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    // Khi đã chạy xuống đây, chắc chắn allShowtimes đã có dữ liệu thật từ DB
-    final DateTime anchorDate = provider.allShowtimes.first.startTime.toLocal();
-
-    // Chuẩn hóa đưa giờ phút giây về 00:00:00 để so sánh Ngày/Tháng/Năm thuần túy
-    final DateTime normalizedAnchor = DateTime(
-      anchorDate.year,
-      anchorDate.month,
-      anchorDate.day,
-    );
-
-    // Đồng bộ trạng thái: Nếu ngày được chọn chưa trùng với ngày suất chiếu trong DB, ép chọn luôn ngày đầu tiên
-    if (provider.selectedDate == null ||
-        provider.selectedDate!.year != normalizedAnchor.year ||
-        provider.selectedDate!.month != normalizedAnchor.month ||
-        provider.selectedDate!.day != normalizedAnchor.day) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        provider.selectDate(normalizedAnchor);
-      });
-    }
+    final List<String> availableDates = provider.getAvailableDates();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,18 +247,17 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           height: 95,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: 7,
+            itemCount: availableDates.length,
             itemBuilder: (context, index) {
-              // Lịch chiếu luôn luôn chạy chuẩn từ ngày trong DB trở đi (Ví dụ: 01/06, 02/06...)
-              final date = normalizedAnchor.add(Duration(days: index));
+              final String dateStr = availableDates[index];
+              bool isSelected = provider.selectedDate == dateStr;
 
-              bool isSelected =
-                  provider.selectedDate?.day == date.day &&
-                  provider.selectedDate?.month == date.month &&
-                  provider.selectedDate?.year == date.year;
+              final parts = dateStr.split('/');
+              final String dayDisplay = parts.isNotEmpty ? parts[0] : '';
+              final String monthDisplay = parts.length > 1 ? parts[1] : '';
 
               return GestureDetector(
-                onTap: () => provider.selectDate(date),
+                onTap: () => provider.selectDate(dateStr),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.only(right: 12),
@@ -234,9 +271,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         : AppColors.cardColor,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isSelected
-                          ? AppColors.secondary
-                          : Colors.transparent,
+                      color: isSelected ? AppColors.secondary : Colors.transparent,
                       width: 1.5,
                     ),
                   ),
@@ -244,22 +279,18 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '${date.day}',
+                        dayDisplay,
                         style: AppTextStyles.headlineMedium.copyWith(
-                          color: isSelected
-                              ? AppColors.secondary
-                              : AppColors.textPrimary,
+                          color: isSelected ? AppColors.secondary : AppColors.textPrimary,
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "Thg ${date.month}",
+                        "Thg $monthDisplay",
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: isSelected
-                              ? AppColors.secondary
-                              : AppColors.textSecondary,
+                          color: isSelected ? AppColors.secondary : AppColors.textSecondary,
                           fontSize: 11,
                         ),
                       ),
@@ -274,181 +305,124 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     );
   }
 
- Widget _buildBackendCinemaSelection(MovieDetailProvider provider) {
-  if (provider.selectedDate == null) {
-    return const Center(child: Text("Vui lòng chọn ngày chiếu"));
-  }
-
-  // DEBUG: Log thông tin filter gốc của bạn
-  print("🔍 Filter Cinema - selectedDate: ${provider.selectedDate}");
-  print("🔍 Tổng số suất chiếu nhận được từ BE: ${provider.allShowtimes.length}");
-
-  // Lọc rạp theo Ngày/Tháng/Năm chuẩn hóa
-  final filteredShowtimes = provider.allShowtimes.where((st) {
-    final localTime = st.startTime.toLocal();
-    final match =
-        localTime.day == provider.selectedDate?.day &&
-        localTime.month == provider.selectedDate?.month &&
-        localTime.year == provider.selectedDate?.year;
-    if (!match) {
-      print(
-        "  ❌ Lọc bỏ: ID=${st.id}, ngày=${localTime.day}/${localTime.month}/${localTime.year}",
-      );
-    }
-    return match;
-  }).toList();
-
-  print("🔍 Sau filter: ${filteredShowtimes.length} suất chiếu");
-
-  // Gom cụm danh sách tên rạp (Xử lý an toàn nếu trường cinema hoặc name bị null từ DB)
-  final availableCinemas = filteredShowtimes
-      .map((st) => st.cinema?.name ?? "Rạp chiếu đối tác")
-      .toSet()
-      .toList();
-
-  print("🔍 Các rạp có suất chiếu: $availableCinemas");
-
-  if (availableCinemas.isEmpty) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 20),
-      child: Center(
-        child: Text(
-          "Không có suất chiếu nào cho ngày này",
-          style: TextStyle(
-            color: Colors.white30,
-            fontSize: 14,
-            fontStyle: FontStyle.italic,
+  Widget _buildBackendCinemaSelection(ShowtimeProvider provider) {
+    if (provider.selectedDate == null) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Text(
+            "Vui lòng chọn ngày chiếu",
+            style: TextStyle(color: Colors.white30, fontSize: 14, fontStyle: FontStyle.italic),
           ),
         ),
-      ),
+      );
+    }
+
+    final availableCinemas = provider.getCinemasBySelectedDate();
+
+    if (availableCinemas.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Text(
+            "Không có suất chiếu nào cho ngày này",
+            style: TextStyle(color: Colors.white30, fontSize: 14, fontStyle: FontStyle.italic),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: "Cinema", showSeeAll: false),
+        const SizedBox(height: 12),
+        ...availableCinemas.map((cinemaName) {
+          bool isCinemaSelected = provider.selectedCinema == cinemaName;
+
+          final currentShowtimes = provider.allShowtimes.where((st) {
+            return st.formattedDate == provider.selectedDate && st.cinemaName == cinemaName;
+          }).toList();
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isCinemaSelected ? AppColors.secondary : Colors.transparent,
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () => provider.selectCinema(cinemaName),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.movie_creation_outlined, color: Colors.redAccent, size: 24),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          cinemaName,
+                          style: AppTextStyles.titleMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(
+                        isCinemaSelected ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        color: Colors.white54,
+                      ),
+                    ],
+                  ),
+                ),
+                if (isCinemaSelected) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Divider(color: Colors.white10),
+                  ),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: currentShowtimes.map((st) {
+                      final timeStr = st.formattedTime;
+                      bool isTimeSelected = provider.selectedShowtime?.id == st.id;
+
+                      return GestureDetector(
+                        onTap: () => provider.selectShowtime(st),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isTimeSelected ? AppColors.secondary : Colors.grey.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: isTimeSelected ? AppColors.secondary : Colors.white10,
+                            ),
+                          ),
+                          child: Text(
+                            timeStr,
+                            style: TextStyle(
+                              color: isTimeSelected ? Colors.black : Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const SectionHeader(title: "Cinema", showSeeAll: false),
-      const SizedBox(height: 12),
-      ...availableCinemas.map((cinemaName) {
-        bool isCinemaSelected = provider.selectedCinemaName == cinemaName;
-
-        // 💡 SỬA LỖI CHÍ MẠNG TẠI ĐÂY: Đồng bộ hóa chuỗi kiểm tra tên rạp "Rạp chiếu đối tác" 
-        // Tránh việc so sánh null == "Rạp chiếu đối tác" làm mất suất chiếu bên trong widget Wrap
-        final currentShowtimes = provider.allShowtimes.where((st) {
-          final localTime = st.startTime.toLocal();
-          
-          final isSameDate = localTime.day == provider.selectedDate?.day &&
-              localTime.month == provider.selectedDate?.month &&
-              localTime.year == provider.selectedDate?.year;
-              
-          final currentCinemaName = st.cinema?.name ?? "Rạp chiếu đối tác";
-          
-          return isSameDate && currentCinemaName == cinemaName;
-        }).toList();
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.cardColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isCinemaSelected
-                  ? AppColors.secondary
-                  : Colors.transparent,
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GestureDetector(
-                onTap: () => provider.selectCinema(cinemaName),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.movie_creation_outlined,
-                      color: Colors.redAccent,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    // Giữ nguyên widget Expanded fix lỗi tràn màn hình đã làm ở bước trước
-                    Expanded(
-                      child: Text(
-                        cinemaName,
-                        style: AppTextStyles.titleMedium,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Icon(
-                      isCinemaSelected
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: Colors.white54,
-                    ),
-                  ],
-                ),
-              ),
-              if (isCinemaSelected) ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Divider(color: Colors.white10),
-                ),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: currentShowtimes.map((st) {
-                    final localStTime = st.startTime.toLocal();
-                    final timeStr =
-                        "${localStTime.hour.toString().padLeft(2, '0')}:${localStTime.minute.toString().padLeft(2, '0')}";
-                    bool isTimeSelected =
-                        provider.selectedShowtime?.id == st.id;
-
-                    return GestureDetector(
-                      onTap: () => provider.selectShowtime(st),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isTimeSelected
-                              ? AppColors.secondary
-                              : Colors.grey.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: isTimeSelected
-                                ? AppColors.secondary
-                                : Colors.white10,
-                          ),
-                        ),
-                        child: Text(
-                          timeStr,
-                          style: TextStyle(
-                            color: isTimeSelected
-                                ? Colors.black
-                                : Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ],
-          ),
-        );
-      }).toList(),
-    ],
-  );
-}
-
-  Widget _buildContinueFloatingButton(
-    MovieDetailProvider provider,
-    Movie movie,
-  ) {
+  Widget _buildContinueFloatingButton(ShowtimeProvider provider, Movie movie) {
     return Positioned(
       bottom: 24,
       left: 16,
@@ -470,7 +444,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                   AppRoutes.selectSeat,
                   arguments: {
                     'movie': movie,
-                    'showtime': provider.selectedShowtime,
+                    'showtime': provider.selectedShowtime!,
                   },
                 );
               },
@@ -488,46 +462,143 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 }
 
 // ============================================================================
-// CÁC WIDGET CLASSES PHỤ TRỢ (GIỮ NGUYÊN ĐỂ KHÔNG BỊ LỖI GẠCH ĐỎ)
+// COMPONENT PHỤ TRỢ: TÍNH TOÁN ĐIỂM ĐỘNG & ĐÁNH GIÁ TƯƠNG TÁC QUA 5 NGÔI SAO
 // ============================================================================
 
+// lib/presentation/movie/screens/movie_detail_screen.dart
+
 class MovieRatingSection extends StatefulWidget {
-  final Movie movie;
-  const MovieRatingSection({super.key, required this.movie});
+  final int movieId;
+  final double averageScore;
+  final int totalRatings;
+
+  const MovieRatingSection({
+    super.key,
+    required this.movieId,
+    required this.averageScore,
+    required this.totalRatings,
+  });
+
   @override
   State<MovieRatingSection> createState() => _MovieRatingSectionState();
 }
 
 class _MovieRatingSectionState extends State<MovieRatingSection> {
-  int _userRating = 0;
+  // 💡 BIẾN TRẠNG THÁI: Lưu số sao người dùng đang bấm chọn thử (0 nghĩa là chưa chọn thử)
+  int _selectedStarsTrial = 0; 
+
+  void _showErrorDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.redAccent, size: 28),
+            const SizedBox(width: 10),
+            Text(title, style: AppTextStyles.titleMedium.copyWith(color: Colors.white)),
+          ],
+        ),
+        content: Text(message, style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Đã hiểu", style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleRatingSubmission(int ratingValue) async {
+    final ratingProvider = Provider.of<RatingProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    String? realUserToken = authProvider.token; 
+
+    // Gửi thang điểm gốc từ 1 đến 5 chuẩn xác theo định dạng double sang Provider
+    double calculatedScore = ratingValue.toDouble();
+
+    final String? errorMessage = await ratingProvider.submitRating(
+      movieId: widget.movieId,
+      score: calculatedScore,
+      review: "Phim xem rất hay!",
+      token: realUserToken,
+    );
+
+    if (!mounted) return;
+
+    if (errorMessage != null) {
+      _showErrorDialog(context, "Thông báo từ hệ thống", errorMessage);
+      // 💡 Nếu xảy ra lỗi (chưa xem phim, trùng lặp,...), reset số sao chọn thử về 0
+      setState(() => _selectedStarsTrial = 0);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text("🎉 Cảm ơn bạn đã gửi đánh giá thành công!", style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+      );
+      // 💡 Gửi thành công, reset trạng thái chọn thử để UI cập nhật theo điểm trung bình mới từ Server
+      setState(() => _selectedStarsTrial = 0);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Lấy điểm trung bình hệ 5 trực tiếp từ MySQL trả về
+    double displayStars = widget.averageScore; 
+
     return Row(
       children: [
         const Text("Review", style: AppTextStyles.titleSmall),
         const SizedBox(width: 8),
         const Icon(Icons.star, color: Colors.amber, size: 18),
         Text(
-          " ${widget.movie.rating.toStringAsFixed(1)}",
+          " ${displayStars.toStringAsFixed(1)}",
           style: AppTextStyles.bodyMedium,
         ),
         Text(
-          " (${widget.movie.reviewCount})",
+          " (${widget.totalRatings})",
           style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
         const Spacer(),
+        
+        // Khối 5 ngôi sao tương tác thuật toán click 2 bước
         Row(
           children: List.generate(5, (index) {
+            int starPositionValue = index + 1;
+            
+            // 💡 QUY LUẬT SÁNG SAO: Nếu đang có số sao chọn thử -> Ưu tiên sáng theo số sao chọn thử. 
+            // Nếu không có chọn thử -> Sáng theo điểm trung bình hệ thống (displayStars).
+            bool isLit = _selectedStarsTrial > 0 
+                ? starPositionValue <= _selectedStarsTrial 
+                : starPositionValue <= displayStars.floor();
+
             return GestureDetector(
-              onTap: () => setState(() => _userRating = index + 1),
+              onTap: () {
+                if (_selectedStarsTrial == starPositionValue) {
+                  // 🌟 CLICK LẦN 2 (Trùng số sao đang chọn thử): Kích hoạt gửi dữ liệu thật lên MySQL
+                  print('🚀 Thực hiện gửi đánh giá thật: $starPositionValue sao');
+                  _handleRatingSubmission(starPositionValue);
+                } else {
+                  // 🌟 CLICK LẦN 1 (Hoặc đổi ý bấm số sao khác): Chỉ hiển thị màu vàng nhấp nháy chọn thử
+                  print('⭐ Người dùng đang chọn thử: $starPositionValue sao (Chờ click lần 2)');
+                  setState(() {
+                    _selectedStarsTrial = starPositionValue;
+                  });
+                }
+              },
               child: Padding(
                 padding: const EdgeInsets.only(left: 4),
+                // Tách biệt màu sắc: Nếu đang ở chế độ "Chọn thử" thì cho màu vàng Amber rực rỡ, 
+                // nếu là điểm hệ thống thì dùng màu secondary mặc định của app để phân biệt trực quan
                 child: Icon(
                   Icons.star,
-                  color: index < _userRating
-                      ? AppColors.secondary
+                  color: isLit 
+                      ? (_selectedStarsTrial > 0 ? Colors.amber : AppColors.secondary)
                       : Colors.grey[700],
                   size: 24,
                 ),
@@ -540,67 +611,54 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
   }
 }
 
+
 class MovieMetadataRow extends StatelessWidget {
   final Movie movie;
   const MovieMetadataRow({super.key, required this.movie});
+
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start, // 💡 Căn đỉnh các cột để khi có cột xuống dòng nhìn UI vẫn thẳng hàng
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Cột Thể loại (Bọc Expanded vì dữ liệu này dễ dài nhất)
         Expanded(
-          flex: 4, // Chiếm tỉ lệ không gian rộng hơn một chút cho thể loại
+          flex: 4,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Genre", style: AppTextStyles.bodyMedium),
+              const Text("Movie genre:", style: AppTextStyles.bodyMedium),
               const SizedBox(height: 4),
               Text(
                 movie.formattedGenres,
                 style: AppTextStyles.titleSmall,
-                maxLines: 2, // Cho phép xuống tối đa 2 dòng nếu quá nhiều thể loại
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8), // Khoảng cách an toàn giữa các cột
-
-        // 2. Cột Nhãn độ tuổi
-        Expanded(
-          flex: 3,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Censorship", style: AppTextStyles.bodyMedium),
-              const SizedBox(height: 4),
-              Text(
-                movie.ageRating,
-                style: AppTextStyles.titleSmall,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
         const SizedBox(width: 8),
-
-        // 3. Cột Ngôn ngữ
         Expanded(
           flex: 3,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Language", style: AppTextStyles.bodyMedium),
+              const Text("Censorship:", style: AppTextStyles.bodyMedium),
               const SizedBox(height: 4),
-              Text(
-                movie.language,
-                style: AppTextStyles.titleSmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              Text(movie.ageRating, style: AppTextStyles.titleSmall),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 3,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Language:", style: AppTextStyles.bodyMedium),
+              const SizedBox(height: 4),
+              Text(movie.language, style: AppTextStyles.titleSmall),
             ],
           ),
         ),
@@ -612,12 +670,14 @@ class MovieMetadataRow extends StatelessWidget {
 class MovieStorylineSection extends StatefulWidget {
   final Movie movie;
   const MovieStorylineSection({super.key, required this.movie});
+
   @override
   State<MovieStorylineSection> createState() => _MovieStorylineSectionState();
 }
 
 class _MovieStorylineSectionState extends State<MovieStorylineSection> {
   bool _isStorylineExpanded = false;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -649,6 +709,7 @@ class _MovieStorylineSectionState extends State<MovieStorylineSection> {
 class HorizontalDirectorList extends StatelessWidget {
   final Movie movie;
   const HorizontalDirectorList({super.key, required this.movie});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -657,80 +718,40 @@ class HorizontalDirectorList extends StatelessWidget {
         const SectionHeader(title: "Director", showSeeAll: false),
         const SizedBox(height: 12),
         SizedBox(
-          height: 100,
+          height: 90,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: movie.directors.length,
             itemBuilder: (context, index) {
               return Container(
-                width: 90,
+                width: 140,
                 margin: const EdgeInsets.only(right: 12),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Colors.grey[800],
-                      child: const Icon(Icons.person, color: Colors.white38),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      movie.directors[index],
-                      style: AppTextStyles.bodyMedium,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.cardColor,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class HorizontalActorList extends StatelessWidget {
-  final Movie movie;
-  const HorizontalActorList({super.key, required this.movie});
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: "Actor", showSeeAll: false),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 100,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: movie.cast.length,
-            itemBuilder: (context, index) {
-              final actor = movie.cast[index];
-              return Container(
-                width: 90,
-                margin: const EdgeInsets.only(right: 12),
-                child: Column(
+                child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 28,
+                      radius: 20,
                       backgroundColor: Colors.grey[800],
-                      backgroundImage:
-                          actor['image'] != null && actor['image']!.isNotEmpty
-                          ? NetworkImage(actor['image']!)
-                          : null,
-                      child: actor['image'] == null || actor['image']!.isEmpty
-                          ? const Icon(Icons.person, color: Colors.white38)
-                          : null,
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.white38,
+                        size: 20,
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      actor['name'] ?? '',
-                      style: AppTextStyles.bodyMedium,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        movie.directors[index],
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),

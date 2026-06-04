@@ -1,95 +1,84 @@
-// lib/features/movie/providers/movie_detail_provider.dart
-
+// lib/presentation/movie/providers/movie_detail_provider.dart
 import 'package:flutter/material.dart';
+import '../../../data/models/movie.dart';
 import '../../../data/models/showtime.dart';
-import '../../../data/services/cinema_api_service.dart';
+import '../../../data/services/movie_api_service.dart';
+// Giả định bạn có ShowtimeApiService riêng, hoặc tích hợp chung vào MovieApiService
+import '../../../data/services/showtime_api_service.dart'; 
 
 class MovieDetailProvider extends ChangeNotifier {
-  final CinemaApiService _apiService = CinemaApiService();
+  final MovieApiService _movieService = MovieApiService();
+  final ShowtimeApiService _showtimeService = ShowtimeApiService();
 
-  bool isLoading = false;
-  List<BackendShowtime> allShowtimes = [];
+  List<Showtime> _allShowtimes = [];
+  double _averageScore = 0.0;
+  int _totalRatings = 0;
+  bool _isLoading = true;
+  String? _error;
 
-  // Trạng thái người dùng chọn trên UI
-  DateTime? selectedDate;
-  String? selectedCinemaName;
-  BackendShowtime? selectedShowtime;
+  DateTime? _selectedDate;
+  String? _selectedCinemaName;
+  Showtime? _selectedShowtime;
 
-  Future<void> loadShowtimes(int movieId) async {
-    isLoading = true;
+  // Getters
+  List<Showtime> get allShowtimes => _allShowtimes;
+  double get averageScore => _averageScore;
+  int get totalRatings => _totalRatings;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  DateTime? get selectedDate => _selectedDate;
+  String? get selectedCinemaName => _selectedCinemaName;
+  Showtime? get selectedShowtime => _selectedShowtime;
+
+  Future<void> loadMovieDetailData(int movieId) async {
+    _isLoading = true;
+    _error = null;
+    _selectedDate = null;
+    _selectedCinemaName = null;
+    _selectedShowtime = null;
     notifyListeners();
 
     try {
-      // 1. Gọi dịch vụ API lấy dữ liệu thô từ backend
-      final data = await _apiService.getShowtimesByMovie(movieId);
+      // Gọi đồng bộ bất đồng bộ song song cả 2 API để tối ưu thời gian phản hồi
+      final results = await Future.wait([
+        _showtimeService.getShowtimesByMovieId(movieId), // Hoặc hàm tương đương xử lý gọi GET /showtimes?movieId=X
+        _movieService.getMovieRatingStats(movieId),
+      ]);
 
-      print("🔍 DỮ LIỆU THÔ TỪ BACKEND TRẢ VỀ: $data");
+      _allShowtimes = results[0] as List<Showtime>;
+      
+      final ratingStats = results[1] as Map<String, dynamic>;
+      _averageScore = ratingStats['averageScore'];
+      _totalRatings = ratingStats['totalRatings'];
 
-      // 2. Chuyển đổi an toàn sang danh sách Model Object
-      allShowtimes = data.map((json) {
-        return BackendShowtime.fromJson(json as Map<String, dynamic>);
-      }).toList();
-
-      // 3. Sắp xếp thứ tự suất chiếu từ sáng đến tối để UI hiển thị đẹp mắt hơn
-      allShowtimes.sort((a, b) => a.startTime.compareTo(b.startTime));
-
-      // 4. LOGIC TỰ ĐỘNG CHỌN NGÀY MẶC ĐỊNH SAU KHI FETCH DATA THÀNH CÔNG
-      if (allShowtimes.isNotEmpty) {
-        final firstShowtimeDate = allShowtimes.first.startTime.toLocal();
-        // Chỉ giữ lại Ngày - Tháng - Năm, đưa giờ phút giây về 0 để so sánh chuẩn xác
-        selectedDate = DateTime(
-          firstShowtimeDate.year,
-          firstShowtimeDate.month,
-          firstShowtimeDate.day,
-        );
-      } else {
-        // Nếu bộ phim hoàn toàn chưa có suất chiếu nào dưới DB backend
-        final now = DateTime.now();
-        selectedDate = DateTime(now.year, now.month, now.day);
-      }
-
-      // Reset lại trạng thái rạp và giờ chiếu cũ tránh lưu đè dữ liệu của phim trước
-      selectedCinemaName = null;
-      selectedShowtime = null;
     } catch (e) {
-      // Bẫy lỗi log ra màn hình debug nếu backend trả dữ liệu sai cấu trúc model
-      print("❌ LỖI TẠI MOVIE_DETAIL_PROVIDER (loadShowtimes): $e");
-      allShowtimes = [];
+      _error = e.toString();
+      print("❌ Error in MovieDetailProvider: $e");
     } finally {
-      isLoading = false;
+      _isLoading = false;
       notifyListeners();
     }
   }
 
   void selectDate(DateTime date) {
-    // CHUẨN HÓA: Đưa ngày người dùng click chọn về Local Time và triệt tiêu giờ phút giây
-    final localDate = date.toLocal();
-    selectedDate = DateTime(localDate.year, localDate.month, localDate.day);
-
-    print("📅 Người dùng chọn ngày: $selectedDate");
-
-    // Đổi ngày thì bắt buộc phải xóa lựa chọn rạp và giờ cũ
-    selectedCinemaName = null;
-    selectedShowtime = null;
+    _selectedDate = date;
+    _selectedCinemaName = null;
+    _selectedShowtime = null;
     notifyListeners();
   }
 
   void selectCinema(String cinemaName) {
-    if (selectedCinemaName == cinemaName) {
-      // Nếu người dùng click vào rạp đang mở -> Tự động thu gọn đóng danh sách giờ lại
-      selectedCinemaName = null;
-      print("🔽 Đóng rạp: $cinemaName");
+    if (_selectedCinemaName == cinemaName) {
+      _selectedCinemaName = null; // Toggle đóng/mở rạp
     } else {
-      selectedCinemaName = cinemaName;
-      print("🔼 Mở rạp: $cinemaName");
+      _selectedCinemaName = cinemaName;
     }
-    // Đổi rạp thì reset giờ chiếu đang chọn
-    selectedShowtime = null;
+    _selectedShowtime = null;
     notifyListeners();
   }
 
-  void selectShowtime(BackendShowtime showtime) {
-    selectedShowtime = showtime;
+  void selectShowtime(Showtime showtime) {
+    _selectedShowtime = showtime;
     notifyListeners();
   }
 }

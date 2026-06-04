@@ -1,56 +1,103 @@
-import 'cinema.dart';
+// lib/data/models/showtime.dart
+import 'package:intl/intl.dart';
 
-class BackendShowtime {
+class Showtime {
   final int id;
   final int movieId;
   final int roomId;
   final DateTime startTime;
+  final DateTime endTime;
   final double basePrice;
   final double vipPrice;
   final double couplePrice;
-  final Cinema? cinema; // Thường được lồng kèm trong API chi tiết suất chiếu
+  final String status;
+  final String roomName;     
+  final String cinemaName;   
 
-  BackendShowtime({
+  Showtime({
     required this.id,
     required this.movieId,
     required this.roomId,
     required this.startTime,
+    required this.endTime,
     required this.basePrice,
     required this.vipPrice,
     required this.couplePrice,
-    this.cinema,
+    required this.status,
+    required this.roomName,
+    required this.cinemaName,
   });
 
- factory BackendShowtime.fromJson(Map<String, dynamic> json) {
-  Cinema? associatedCinema;
+  factory Showtime.fromJson(Map<String, dynamic> json) {
+    final startStr = json['startTime'] ?? json['start_time'] ?? '';
+    final endStr = json['endTime'] ?? json['end_time'] ?? '';
+    
+    // 1. Bóc tách khối thông tin Phòng chiếu (Room)
+    final roomBlock = json['room'] is Map ? json['room'] : null;
+    final String extractedRoomName = roomBlock != null 
+        ? (roomBlock['name'] ?? 'Phòng chiếu') 
+        : 'Phòng chiếu';
 
-  // 💡 QUÉT ĐA TẦNG: Chấp nhận tất cả các kiểu trả về của Backend để không bị sót
-  if (json['room'] != null) {
-    var roomJson = json['room'];
-    if (roomJson['cinema'] != null) {
-      associatedCinema = Cinema.fromJson(roomJson['cinema'] as Map<String, dynamic>);
-    } else if (roomJson['Cinema'] != null) {
-      associatedCinema = Cinema.fromJson(roomJson['Cinema'] as Map<String, dynamic>);
+    // 2. KHÔI PHỤC: Bộ lọc bóc tách tên rạp đa tầng từ Object lồng nhau
+    final cinemaBlock = json['cinema'] is Map ? json['cinema'] : null;
+    String extractedCinemaName = 'Rạp MBooking'; 
+
+    if (cinemaBlock != null) {
+      // Bóc từ "cinema": {"name": "CGV Vincom Center"}
+      extractedCinemaName = cinemaBlock['name'] ?? 'Rạp MBooking';
+    } else if (json['cinemaName'] != null) {
+      extractedCinemaName = json['cinemaName'];
+    } else if (json['cinema_name'] != null) {
+      extractedCinemaName = json['cinema_name'];
+    } else if (json['cinemaId'] != null || json['cinema_id'] != null) {
+      final int cId = json['cinemaId'] ?? json['cinema_id'] ?? 1;
+      extractedCinemaName = 'Rạp Đối Tác (ID: $cId)';
     }
-  } else if (json['Room'] != null) { // Trường hợp Backend trả về chữ R viết hoa
-    var roomJson = json['Room'];
-    if (roomJson['Cinema'] != null) {
-      associatedCinema = Cinema.fromJson(roomJson['Cinema'] as Map<String, dynamic>);
-    } else if (roomJson['cinema'] != null) {
-      associatedCinema = Cinema.fromJson(roomJson['cinema'] as Map<String, dynamic>);
-    }
+
+    return Showtime(
+      id: json['id'] ?? 0,
+      movieId: json['movieId'] ?? json['movie_id'] ?? 0,
+      roomId: json['roomId'] ?? json['room_id'] ?? 0,
+      startTime: startStr.isNotEmpty ? DateTime.parse(startStr).toLocal() : DateTime.now(),
+      endTime: endStr.isNotEmpty ? DateTime.parse(endStr).toLocal() : DateTime.now(),
+      basePrice: (json['basePrice'] ?? json['base_price'] ?? 0).toDouble(),
+      vipPrice: (json['vipPrice'] ?? json['vip_price'] ?? 0).toDouble(),
+      couplePrice: (json['couplePrice'] ?? json['couple_price'] ?? 0).toDouble(),
+      status: json['status'] ?? 'ACTIVE',
+      roomName: extractedRoomName,
+      cinemaName: extractedCinemaName, 
+    );
   }
 
-  // Khôi phục các đoạn gán trường khác bên dưới của bạn...
-  return BackendShowtime(
-    id: json['id'] ?? 0,
-    movieId: json['movie_id'] ?? json['movieId'] ?? 0,
-    roomId: json['room_id'] ?? json['roomId'] ?? 0,
-    startTime: DateTime.parse(json['start_time'] ?? json['startTime']),
-    basePrice: (json['base_price'] ?? json['basePrice'] ?? 0).toDouble(),
-    vipPrice: (json['vip_price'] ?? json['vipPrice'] ?? 0).toDouble(),
-    couplePrice: (json['couple_price'] ?? json['couplePrice'] ?? 0).toDouble(),
-    cinema: associatedCinema, // Gán đối tượng rạp đã bóc tách an toàn
-  );
-}
+  String get formattedTime => DateFormat('HH:mm').format(startTime);
+  String get formattedDate => DateFormat('dd/MM/yyyy').format(startTime);
+
+  // Thêm hàm này vào cuối class Showtime trước dấu đóng ngoặc nhọn }
+  Showtime copyWith({
+    int? id,
+    int? movieId,
+    int? roomId,
+    DateTime? startTime,
+    DateTime? endTime,
+    double? basePrice,
+    double? vipPrice,
+    double? couplePrice,
+    String? status,
+    String? roomName,
+    String? cinemaName,
+  }) {
+    return Showtime(
+      id: id ?? this.id,
+      movieId: movieId ?? this.movieId,
+      roomId: roomId ?? this.roomId,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      basePrice: basePrice ?? this.basePrice,
+      vipPrice: vipPrice ?? this.vipPrice,
+      couplePrice: couplePrice ?? this.couplePrice,
+      status: status ?? this.status,
+      roomName: roomName ?? this.roomName,
+      cinemaName: cinemaName ?? this.cinemaName,
+    );
+  }
 }
