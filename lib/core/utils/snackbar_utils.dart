@@ -3,6 +3,8 @@ import '../constants/app_colors.dart';
 
 class SnackbarUtils {
   static void showSuccess(BuildContext context, String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -27,6 +29,8 @@ class SnackbarUtils {
   }
 
   static void showError(BuildContext context, String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

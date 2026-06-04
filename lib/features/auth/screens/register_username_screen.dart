@@ -10,8 +10,8 @@ class RegisterUsernameScreen extends StatelessWidget {
   const RegisterUsernameScreen({super.key, required this.username});
 
   void _handleDone(BuildContext context) {
-    // Sửa luồng: Chạy về MainScreen thay vì HomeScreen
-    Navigator.pushReplacementNamed(context, AppRoutes.main);
+    // Chuyển về màn hình đăng nhập để người dùng login bằng tài khoản mới
+    Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
   }
 
   @override

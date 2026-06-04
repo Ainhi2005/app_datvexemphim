@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../../core/utils/token_storage.dart'; // Import thêm để đọc token khi khởi tạo
+import '../../../core/utils/error_handler.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _repository = AuthRepository();
@@ -52,7 +53,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = ErrorHandler.handle(e).message;
       _setLoading(false);
       return false;
     }
@@ -68,7 +69,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = ErrorHandler.handle(e).message;
       _setLoading(false);
       return false;
     }
@@ -84,7 +85,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = ErrorHandler.handle(e).message;
       _setLoading(false);
       return false;
     }
@@ -100,7 +101,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = ErrorHandler.handle(e).message;
       _setLoading(false);
       return false;
     }
@@ -118,4 +119,4 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-}
+}

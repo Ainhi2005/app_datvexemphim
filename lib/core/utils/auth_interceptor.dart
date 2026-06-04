@@ -58,25 +58,30 @@ class AuthInterceptor extends Interceptor {
 
   Future<bool> _refreshToken() async {
     try {
+      // Lấy refresh token hiện tại đang lưu trong máy
       final refreshToken = await _tokenStorage.getRefreshToken();
       if (refreshToken == null) return false;
 
-      // Use a separate Dio instance or base client without this interceptor to avoid loops
+      // Sử dụng một instance Dio độc lập để tránh vòng lặp vô hạn
       final refreshDio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
       final response = await refreshDio.post('/auth/refresh-token', data: {
         'refreshToken': refreshToken,
       });
 
-      if (response.statusCode == 200) {
-        final newAccessToken = response.data['accessToken'];
-        final newRefreshToken = response.data['refreshToken'];
+      if (response.statusCode == 200 && response.data != null) {
+        // 1. Đi sâu vào tầng 'data' theo đúng chuẩn API trả về của Backend
+        final dataBlock = response.data['data'] ?? {};
+        
+        // 2. Lấy Access Token mới (khớp với key 'accessToken' trong RefreshTokenHandler.js)
+        final newAccessToken = dataBlock['accessToken'];
 
-        if (newAccessToken != null && newRefreshToken != null) {
+        if (newAccessToken != null && newAccessToken.isNotEmpty) {
+          // 3. SỬA TẠI ĐÂY: Lưu Access Token mới và GIỮ NGUYÊN Refresh Token cũ vào máy
           await _tokenStorage.saveTokens(
             accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
+            refreshToken: refreshToken, // Dùng lại chính cái token đang có hiệu lực
           );
-          return true;
+          return true; // Trả về true để hệ thống tự thực hiện lại request lỗi vừa rồi
         }
       }
       return false;

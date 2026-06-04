@@ -19,7 +19,7 @@ void main() {
     DevicePreview(
       // Tự động TẮT khi build release (app thật), BẬT khi chạy debug
       // Nếu bạn muốn tắt hẳn cho cả team lúc code, đổi thành: enabled: false,
-      enabled: !kReleaseMode, 
+      enabled: kReleaseMode, // kReleaseMode ? false : true,
       builder: (context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),

@@ -12,8 +12,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       // --- Thêm 2 dòng này để kết nối với Device Preview ---
-      locale: DevicePreview.locale(context),
-      builder: DevicePreview.appBuilder,
+      locale: DevicePreview.isEnabled(context) ? DevicePreview.locale(context) : null,
+      builder: DevicePreview.isEnabled(context) ? DevicePreview.appBuilder : null,
       // ---------------------------------------------------
       
       title: 'Movie App',

@@ -1,15 +1,17 @@
-﻿import 'package:flutter/material.dart';
+﻿// lib/features/profile/screens/profile_screen.dart
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_strings.dart'; // Import chuỗi dùng chung
+import '../../../core/constants/app_strings.dart'; 
 import '../../../routes/app_routes.dart';
-import '../providers/profile_provider.dart'; // Import ProfileProvider
+import '../providers/profile_provider.dart'; 
 import 'change_language_screen.dart';
 import 'change_password_screen.dart';
 import 'edit_profile_screen.dart'; 
 import '../../../core/utils/snackbar_utils.dart';
-import '../../auth/providers/auth_provider.dart'; // Import AuthProvider để gọi hàm logout
+import '../../../core/widgets/error_view.dart'; // 1. IMPORT THÊM WIDGET ERROR_VIEW CỦA BẠN
+import '../../auth/providers/auth_provider.dart'; 
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,7 +24,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch lại data phòng trường hợp chưa có
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProfileProvider>().fetchProfile();
     });
@@ -35,8 +36,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SafeArea(
         child: Consumer<ProfileProvider>(
           builder: (context, provider, child) {
+            // Kiểm tra trạng thái đang tải dữ liệu
             if (provider.isLoading && provider.user == null) {
               return const Center(child: CircularProgressIndicator(color: AppColors.secondary));
+            }
+
+            // 2. CHÈN THÊM ĐOẠN CHECK LỖI ĐỘNG VÀO ĐÂY:
+            // Nếu có lỗi mạng/hệ thống xảy ra và bộ nhớ đệm chưa có dữ liệu user cũ
+            if (provider.error != null && provider.user == null) {
+              return ErrorView(
+                message: provider.error!, // Truyền lỗi động dạng tiếng Việt thân thiện
+                onRetry: () {
+                  provider.fetchProfile(); // Thực thi gọi lại API khi ấn nút "Thử lại"
+                },
+              );
             }
 
             final user = provider.user;
@@ -54,9 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       CircleAvatar(
                         radius: 40,
                         backgroundColor: AppColors.surface,
-                        backgroundImage: user?.avatarUrl != null 
-                            ? NetworkImage(user!.avatarUrl!) 
-                            : null,
+                        backgroundImage: user?.avatarUrl != null ? NetworkImage(user!.avatarUrl!) : null,
                         child: user?.avatarUrl == null
                             ? const Icon(Icons.person, size: 40, color: AppColors.textSecondary)
                             : null,
@@ -69,17 +80,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  user?.name ?? 'Tên người dùng',
-                                  style: AppTextStyles.headlineMedium,
-                                ),
+                                Text(user?.name ?? 'Tên người dùng', style: AppTextStyles.headlineMedium),
                                 IconButton(
                                   icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary),
                                   onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                                    );
+                                    Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen()));
                                   },
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
@@ -91,10 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 const Icon(Icons.phone_outlined, color: AppColors.textSecondary, size: 16),
                                 const SizedBox(width: 8),
-                                Text(
-                                  user?.phone ?? 'Chưa cập nhật SĐT',
-                                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                                ),
+                                Text(user?.phone ?? 'Chưa cập nhật SĐT', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
                               ],
                             ),
                             const SizedBox(height: 8),
@@ -102,10 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 const Icon(Icons.email_outlined, color: AppColors.textSecondary, size: 16),
                                 const SizedBox(width: 8),
-                                Text(
-                                  user?.email ?? 'Chưa cập nhật Email',
-                                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                                ),
+                                Text(user?.email ?? 'Chưa cập nhật Email', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
                               ],
                             ),
                           ],
@@ -125,41 +124,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }),
                   const SizedBox(height: 24),
                   // Nút Đăng xuất
-                  // Tìm đoạn nút Đăng xuất và sửa lại onPressed:
-SizedBox(
-  width: double.infinity,
-  child: OutlinedButton.icon(
-    onPressed: () async {
-      // 1. Hiện thông báo đang xử lý (tùy chọn)
-      SnackbarUtils.showSuccess(context, 'Đang đăng xuất...');
-      
-      // 2. Gọi hàm logout từ AuthProvider
-      await context.read<AuthProvider>().logout();
-      
-      // 3. Chuyển hướng về trang Login và xóa sạch lịch sử trang (không cho bấm nút Back)
-      if (context.mounted) {
-        Navigator.pushNamedAndRemoveUntil(
-          context, 
-          AppRoutes.login, 
-          (route) => false,
-        );
-      }
-    },
-    icon: const Icon(Icons.logout, color: AppColors.error),
-    label: Text(
-      AppStrings.logout,
-      style: AppTextStyles.bodyLarge.copyWith(
-        color: AppColors.error,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-    style: OutlinedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      side: const BorderSide(color: AppColors.error),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ),
-  ),
-),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        SnackbarUtils.showSuccess(context, 'Đang đăng xuất...');
+                        await context.read<AuthProvider>().logout();
+                        if (context.mounted) {
+                          Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
+                        }
+                      },
+                      icon: const Icon(Icons.logout, color: AppColors.error),
+                      label: Text(
+                        AppStrings.logout,
+                        style: AppTextStyles.bodyLarge.copyWith(color: AppColors.error, fontWeight: FontWeight.bold),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: AppColors.error),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 24),
                 ],
               ),

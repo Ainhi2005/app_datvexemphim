@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+// lib/features/auth/screens/login_screen.dart
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -9,7 +10,6 @@ import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/auth_text_field.dart';
 import '../../../routes/app_routes.dart';
 import '../providers/auth_provider.dart';
-import 'register_screen.dart';
 import '../../../core/utils/remember_me_storage.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -31,55 +31,70 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadRememberedCredentials();
   }
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   // Load thông tin đã lưu khi vào màn hình
   Future<void> _loadRememberedCredentials() async {
     final remembered = await RememberMeStorage.isRemembered();
     if (remembered) {
       final email = await RememberMeStorage.getSavedEmail() ?? '';
       final password = await RememberMeStorage.getSavedPassword() ?? '';
-      setState(() {
-        _rememberMe = true;
-        _emailController.text = email;
-        _passwordController.text = password;
-      });
+      if (mounted) {
+        setState(() {
+          _rememberMe = true;
+          _emailController.text = email;
+          _passwordController.text = password;
+        });
+      }
     }
   }
 
+  // === HÀM XỬ LÝ ĐĂNG NHẬP CHUẨN HOÁ ===
   Future<void> _handleLogin() async {
-    // Kiểm tra lỗi tĩnh (Validator)
+    // 1. Kiểm tra Lỗi tĩnh (Validation)
     if (!_formKey.currentState!.validate()) return;
 
-    // ---> THÊM DÒNG NÀY ĐỂ XÓA SẠCH TOKEN HỎNG TRONG MÁY <---
-    await context.read<AuthProvider>().logout();
-
     final authProvider = context.read<AuthProvider>();
+
+    
+
+    // Thực hiện gọi API đăng nhập
     final success = await authProvider.loginWithEmail(
       _emailController.text.trim(),
       _passwordController.text,
     );
 
-    if (success && mounted) {
-      // ---> THÊM LỆNH LƯU MẬT KHẨU Ở ĐÂY <---
+    // KIỂM TRA BẮT BUỘC: Đảm bảo widget còn mounted sau lệnh await bất đồng bộ
+    if (!mounted) return;
+
+    if (success) {
+      // THỰC HIỆN LƯU MẬT KHẨU KHI THÀNH CÔNG
       await RememberMeStorage.saveCredentials(
         rememberMe: _rememberMe,
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      // ĐÚNG LUỒNG: Về MainScreen để có Bottom Navigation
+      // Điều hướng về trang MainScreen có thanh Bottom Navigation
       Navigator.pushReplacementNamed(context, AppRoutes.main);
     } else {
-      // Bắt lỗi động từ API
-      if (mounted && authProvider.errorMessage != null) {
+      // BẮT LỖI ĐỘNG: Hiển thị Snackbar thông điệp lỗi chuẩn từ Backend
+      if (authProvider.errorMessage != null) {
         SnackbarUtils.showError(context, authProvider.errorMessage!);
-        authProvider.clearError(); // Clear sau khi show
+        authProvider.clearError(); // Dọn dẹp bộ nhớ lỗi sau khi hiển thị
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
+    // TỐI ƯU: Chỉ watch biến isLoading để render nút bấm và hiệu ứng xoay vòng
+    final isLoading = context.watch<AuthProvider>().isLoading;
 
     return Scaffold(
       appBar: const CustomAppBar(title: AppStrings.signIn, actions: []),
@@ -99,9 +114,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: Icons.email,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      validator: (value) => value == null || value.isEmpty
-                          ? AppStrings.pleaseEnterEmail
-                          : null,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return AppStrings.pleaseEnterEmail;
+                        }
+                        final emailRegex = RegExp(r"^[^\s@]+@[^\s@]+\.[^\s@]+$");
+                        if (!emailRegex.hasMatch(value.trim())) {
+                          return 'Định dạng email không hợp lệ';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
                     AuthTextField(
@@ -138,9 +160,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16), // Khoảng cách tới nút Tiếp tục
+                    const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: authProvider.isLoading ? null : _handleLogin,
+                      onPressed: isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.secondary,
                         foregroundColor: Colors.black,
@@ -179,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            if (authProvider.isLoading) const LoadingIndicator(),
+            if (isLoading) const LoadingIndicator(),
           ],
         ),
       ),

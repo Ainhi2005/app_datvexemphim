@@ -1,3 +1,4 @@
+// lib/features/profile/screens/change_password_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -26,9 +27,40 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
 
+  // === HÀM XỬ LÝ ĐỔI MẬT KHẨU ĐƯỢC TÁCH RA ===
+  Future<void> _onChangePassword() async {
+    // 1. Kiểm tra lỗi tĩnh từ Client trước khi gọi API
+    if (_newPwdController.text != _confirmPwdController.text) {
+      SnackbarUtils.showError(context, AppStrings.passwordNotMatch);
+      return;
+    }
+
+    // Dùng context.read thay vì watch trong hành động xử lý để tối ưu hiệu năng
+    final provider = context.read<ProfileProvider>();
+
+    final success = await provider.changePassword(
+      _currentPwdController.text,
+      _newPwdController.text,
+    );
+
+    // Kiểm tra an toàn trạng thái Widget trước khi tương tác giao diện
+    if (!mounted) return;
+
+    if (success) {
+      SnackbarUtils.showSuccess(context, AppStrings.changePasswordSuccess);
+      Navigator.pop(context);
+    } else {
+      if (provider.error != null) {
+        // Hiển thị thông điệp lỗi động sạch đã lọc từ Backend
+        SnackbarUtils.showError(context, provider.error!);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<ProfileProvider>();
+    // Chỉ watch thuộc tính isLoading để cập nhật trạng thái nút bấm
+    final isLoading = context.watch<ProfileProvider>().isLoading;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -55,33 +87,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: provider.isLoading ? null : () async {
-                  if (_newPwdController.text != _confirmPwdController.text) {
-                    SnackbarUtils.showError(context, AppStrings.passwordNotMatch);
-                    return;
-                  }
-
-                  final success = await provider.changePassword(
-                    _currentPwdController.text,
-                    _newPwdController.text,
-                  );
-
-                  if (success) {
-                    if (context.mounted) {
-                      SnackbarUtils.showSuccess(context, AppStrings.changePasswordSuccess);
-                      Navigator.pop(context);
-                    }
-                  } else {
-                    if (context.mounted && provider.error != null) {
-                      SnackbarUtils.showError(context, provider.error!);
-                    }
-                  }
-                },
+                // GỌI HÀM VỪA TÁCH
+                onPressed: isLoading ? null : _onChangePassword,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.secondary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                 ),
-                child: provider.isLoading
+                child: isLoading
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
                     : Text(
                         AppStrings.confirm,

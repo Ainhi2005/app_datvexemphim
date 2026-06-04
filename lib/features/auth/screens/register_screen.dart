@@ -1,3 +1,4 @@
+// lib/features/auth/screens/register_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
@@ -34,18 +35,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  // === HÀM XỬ LÝ ĐĂNG KÝ CHUẨN HOÁ ===
   Future<void> _handleContinue() async {
-    // 1. Kiểm tra Lỗi tĩnh
+    // 1. Kiểm tra Lỗi tĩnh (Validation)
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = context.read<AuthProvider>();
+    
+    // Gọi API đăng ký tài khoản mới
     final success = await authProvider.register(
       _emailController.text.trim(),
       _usernameController.text.trim(),
       _passwordController.text,
     );
 
-    if (success && mounted) {
+    // KIỂM TRA BẮT BUỘC: Tránh lỗi rò rỉ context khi chuyển đổi màn hình bất đồng bộ
+    if (!mounted) return;
+
+    if (success) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -54,31 +61,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
     } else {
-      // 2. Bắt lỗi động
-      if (mounted && authProvider.errorMessage != null) {
+      // 2. BẮT LỖI ĐỘNG: Hiển thị lỗi động từ server (ví dụ: "Email này đã được sử dụng")
+      if (authProvider.errorMessage != null) {
         SnackbarUtils.showError(context, authProvider.errorMessage!);
-        authProvider.clearError();
+        authProvider.clearError(); // Dọn dẹp lỗi sau khi hiển thị xong
       }
     }
   }
 
-  Future<void> _handleFacebook() async {
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.loginWithFacebook();
-    if (success && mounted)
-      Navigator.pushReplacementNamed(context, AppRoutes.main);
-  }
-
-  Future<void> _handleGoogle() async {
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.loginWithGoogle();
-    if (success && mounted)
-      Navigator.pushReplacementNamed(context, AppRoutes.main);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
+    // TỐI ƯU: Chỉ watch duy nhất biến isLoading để tăng tốc độ render UI
+    final isLoading = context.watch<AuthProvider>().isLoading;
 
     return Scaffold(
       appBar: const CustomAppBar(title: AppStrings.signUp, actions: []),
@@ -97,9 +91,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: Icons.email,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) => value == null || value.isEmpty
-                        ? AppStrings.pleaseEnterEmail
-                        : null,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return AppStrings.pleaseEnterEmail;
+                      }
+                      final emailRegex = RegExp(r"^[^\s@]+@[^\s@]+\.[^\s@]+$");
+                      if (!emailRegex.hasMatch(value.trim())) {
+                        return 'Định dạng email không hợp lệ';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   AuthTextField(
@@ -136,7 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: authProvider.isLoading ? null : _handleContinue,
+                    onPressed: isLoading ? null : _handleContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.secondary,
                       foregroundColor: Colors.black,
@@ -172,7 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
-          if (authProvider.isLoading) const LoadingIndicator(),
+          if (isLoading) const LoadingIndicator(),
         ],
       ),
     );
