@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../models/rating.dart';
 import '../../core/constants/api_constants.dart';
 
@@ -28,17 +29,23 @@ class RatingApiService {
       // Khớp cấu trúc Route: {{baseUrl}}/movies/:movieId/ratings
       final response = await _dio.get('/movies/$movieId/ratings');
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final List<dynamic> ratingsData = response.data['data'] ?? [];
+      if (response.statusCode == 200) {
+        List<dynamic> ratingsData = [];
         
+        if (response.data is Map && response.data.containsKey('data')) {
+          ratingsData = response.data['data'];
+        } else if (response.data is List) {
+          ratingsData = response.data;
+        }
+
         return ratingsData.map((json) {
           return Rating.fromJson(Map<String, dynamic>.from(json));
         }).toList();
       }
       return [];
     } catch (e) {
-      print('❌ API List Ratings Error: $e');
-      return []; // Phòng thủ an toàn không ném lỗi ra ngoài làm sập giao diện
+      debugPrint('❌ API List Ratings Error: $e');
+      return [];
     }
   }
 
@@ -49,7 +56,7 @@ class RatingApiService {
         '/movies/$movieId/ratings',
         data: {
           'score': score.toInt(),
-          if (review != null) 'review': review,
+          if (review != null) 'comment': review,
         },
       );
 
@@ -59,11 +66,11 @@ class RatingApiService {
         }
       }
       return false;
-    } on DioException catch (e) {
+    } on DioException {
       // Đẩy nguyên lỗi DioException (chứa statusCode 403, 409) lên tầng Provider bắt thông báo
       rethrow;
     } catch (e) {
-      print('❌ API Create Rating Unexpected Error: $e');
+      debugPrint('❌ API Create Rating Unexpected Error: $e');
       return false;
     }
   }

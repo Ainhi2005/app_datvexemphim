@@ -38,4 +38,22 @@ class UserRepository {
     }
     throw Exception(response['message'] ?? 'Lỗi tải ảnh lên Cloudinary');
   }
+
+  // ── Lấy danh sách tất cả người dùng (Admin) ──
+  Future<List<UserModel>> getAllUsers() async {
+    final response = await _apiService.getAllUsers();
+    if (response['success'] == true) {
+      final List<dynamic> usersList = response['data'] ?? [];
+      return usersList.map((e) => UserModel.fromJson(e)).toList();
+    }
+    throw Exception(response['message'] ?? 'Lỗi tải danh sách người dùng');
+  }
+
+  // ── Cập nhật quyền hạn (Admin) ──
+  Future<void> updateUserRole(int userId, String role) async {
+    final response = await _apiService.updateUserRole(userId, role);
+    if (response['success'] != true) {
+      throw Exception(response['message'] ?? 'Lỗi cập nhật quyền hạn');
+    }
+  }
 }

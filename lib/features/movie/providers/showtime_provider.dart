@@ -33,13 +33,14 @@ class ShowtimeProvider extends ChangeNotifier {
       // 💡 BƯỚC 1: Nạp bản đồ tra cứu toàn bộ phòng rạp vào RAM (Chỉ chạy duy nhất 1 lần khi mở app)
       if (_globalRoomsMap.isEmpty) {
         _globalRoomsMap = await _movieRepository.buildGlobalRoomsLookupMap();
-        print('📦 ĐÃ CACHE XONG TOÀN BỘ PHÒNG CHIẾU CỦA CÁC RẠP: ${_globalRoomsMap.length} phòng sẵn sàng.');
+        debugPrint('Cached ${_globalRoomsMap.length} rooms');
       }
 
       // BƯỚC 2: Gọi 1 request duy nhất lấy danh sách suất chiếu của phim (Né hoàn toàn lỗi 429)
       final rawShowtimes = await _movieRepository.getShowtimesByMovieId(movieId);
       
-      // BƯỚC 3: ĐẬP DATA TÊN RẠP VÀ PHÒNG CHIẾU TỪ BỘ NHỚ ĐỆM MAP
+      // BƯỚC 3: ĐẬP DATA TÊN RẠP VÀ PHÒNG CHIẾU TỪ BỘ NHỚ ĐỆM MAP VÀ LỌC CÁC SUẤT CHIẾU ĐÃ KẾT THÚC
+      final now = DateTime.now();
       _allShowtimes = rawShowtimes.map((showtime) {
         if (_globalRoomsMap.containsKey(showtime.roomId)) {
           final info = _globalRoomsMap[showtime.roomId]!;
@@ -49,9 +50,15 @@ class ShowtimeProvider extends ChangeNotifier {
           );
         }
         return showtime;
+      }).where((st) {
+        // Lọc bỏ các suất chiếu trạng thái ENDED hoặc đã trôi qua thời gian hiện tại
+        return st.status != 'ENDED' && st.startTime.isAfter(now);
       }).toList();
 
-      print('🎯 TRA CỨU HOÀN TẤT! Tên rạp đầu tiên: ${_allShowtimes.isNotEmpty ? _allShowtimes.first.cinemaName : "Trống"}');
+      // Sắp xếp suất chiếu theo thời gian tăng dần để UI hiển thị hợp lý hơn
+      _allShowtimes.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+      debugPrint('First cinema: ${_allShowtimes.isNotEmpty ? _allShowtimes.first.cinemaName : "empty"}');
 
       // Đồng bộ trạng thái UI lịch chiếu
       _selectedDate = null;
@@ -67,7 +74,7 @@ class ShowtimeProvider extends ChangeNotifier {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Lỗi xử lý tại ShowtimeProvider: $e');
+      debugPrint('ShowtimeProvider error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

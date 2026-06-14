@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../routes/app_routes.dart';
 import '../../home/screens/home_screen.dart';
 import '../../movie/screens/movie_screen.dart';
 import '../../profile/screens/profile_screen.dart'; 
 import '../../profile/providers/profile_provider.dart';
+import '../../ticket/screens/ticket_list_screen.dart';
+import '../../auth/providers/auth_provider.dart';
 
 // ================================================================
 // MAIN SCREEN - Nơi quản lý Bottom Navigation Bar CỐ ĐỊNH
@@ -27,18 +30,30 @@ import '../../profile/providers/profile_provider.dart';
 //   - Khi thêm màn hình mới, chỉ cần thêm vào _screens và _navItems
 // ================================================================
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.read<AuthProvider>().isAuthenticated) {
+        context.read<ProfileProvider>().fetchProfile();
+      }
+    });
+  }
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const TicketScreen(),
+    const TicketListScreen(),
     const MovieScreen(),
     const ProfileScreen(),
   ];
@@ -50,13 +65,7 @@ class _MainScreenState extends State<MainScreen> {
     NavItem(Icons.person_outline, 'Hồ sơ'),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileProvider>().fetchProfile();
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +84,7 @@ class _MainScreenState extends State<MainScreen> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -94,10 +103,45 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Yêu cầu đăng nhập', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: const Text('Bạn cần đăng nhập để truy cập tính năng này.', style: TextStyle(color: Colors.grey)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
+            },
+            child: const Text('Đăng nhập', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNavItem(NavItem item, int index) {
     final isSelected = _currentIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        if (index == 1 || index == 3) {
+          final authProvider = context.read<AuthProvider>();
+          if (!authProvider.isAuthenticated) {
+            _showLoginRequiredDialog();
+            return;
+          }
+        }
+        setState(() => _currentIndex = index);
+      },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -124,18 +168,4 @@ class NavItem {
   final IconData icon;
   final String label;
   const NavItem(this.icon, this.label);
-}
-
-// Temporary screens
-class TicketScreen extends StatelessWidget {
-  const TicketScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: const Center(
-        child: Text('Ticket Screen', style: AppTextStyles.headlineMedium),
-      ),
-    );
-  }
 }

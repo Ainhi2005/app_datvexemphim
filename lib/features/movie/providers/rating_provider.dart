@@ -23,22 +23,21 @@ class RatingProvider extends ChangeNotifier {
     Future.microtask(() => notifyListeners());
 
     try {
-      print('🔍 [RatingProvider] Đang gọi API fetchRatings cho movieId: $movieId...');
+      debugPrint('[RatingProvider] Fetching ratings for movieId: $movieId');
       _ratings = await _apiService.getMovieRatings(movieId);
-      print('✅ [RatingProvider] Lấy data Rating thành công. Số lượng: ${_ratings.length}');
+      debugPrint('[RatingProvider] Fetched ${_ratings.length} ratings');
       
       // Tính toán điểm trung bình động hệ 10 từ DB đổ về
       if (_ratings.isNotEmpty) {
         double sum = _ratings.fold(0, (prev, element) => prev + element.score);
         _averageScore = sum / _ratings.length;
-        print('🎯 [RatingProvider] Điểm trung bình tính được (Hệ 10): $_averageScore');
+        debugPrint('[RatingProvider] Average score: $_averageScore');
       } else {
         _averageScore = 0.0;
       }
-    } catch (e, stacktrace) {
+    } catch (e) {
       // 🔥 LOG CHÍ MẠNG: Giúp bạn biết hàm fetch bị sập ở dòng nào
-      print('❌ [RatingProvider] LỖI TRONG HÀM fetchRatings: $e');
-      print('📌 [RatingProvider] Chi tiết StackTrace: $stacktrace');
+      debugPrint('[RatingProvider] fetchRatings error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -52,11 +51,11 @@ class RatingProvider extends ChangeNotifier {
     String? review,
     String? token,
   }) async {
-    print('🚀 [RatingProvider] Bắt đầu submitRating cho movieId: $movieId, score: $score');
+    debugPrint('[RatingProvider] submitRating movieId: $movieId, score: $score');
 
     // 1. Kiểm tra trạng thái đăng nhập phía Client
     if (token == null || token.isEmpty) {
-      print('⚠️ [RatingProvider] Submit thất bại: Không tìm thấy Token người dùng.');
+      debugPrint('[RatingProvider] Submit failed: no token');
       return "Vui lòng đăng nhập để thực hiện đánh giá bộ phim này.";
     }
 
@@ -65,34 +64,33 @@ class RatingProvider extends ChangeNotifier {
     try {
       final bool isSuccess = await _apiService.createRating(movieId, score, review);
       if (isSuccess) {
-        print('🎉 [RatingProvider] Tạo rating thành công trên Server, đang refresh lại danh sách...');
+        debugPrint('[RatingProvider] Rating created, refreshing list...');
         await fetchRatings(movieId); 
         return null; 
       }
       return "Đã xảy ra lỗi không xác định, vui lòng thử lại sau.";
     } on DioException catch (e) {
       // 🔥 LOG CHÍ MẠNG: In sạch sành sanh phản hồi lỗi từ Dio mạng gửi về
-      print('❌ [RatingProvider] LỖI DIO KHI SUBMIT RATING: [Type] -> ${e.type}');
-      print('❌ [RatingProvider] Status Code từ Server: ${e.response?.statusCode}');
-      print('❌ [RatingProvider] Cục Data lỗi Server trả về: ${e.response?.data}');
+      debugPrint('[RatingProvider] DioException: type=${e.type} status=${e.response?.statusCode} data=${e.response?.data}');
 
       if (e.response != null) {
         final status = e.response!.statusCode;
         final data = e.response!.data;
         
         String serverMessage = (data is Map) ? (data['message'] ?? '') : '';
-        print('💬 [RatingProvider] Thông điệp bóc tách từ BE: "$serverMessage"');
+        debugPrint('[RatingProvider] Server message: "$serverMessage"');
 
         if (status == 403) {
           return serverMessage.isNotEmpty ? serverMessage : "Bạn chỉ có thể đánh giá phim sau khi đã xem.";
         } else if (status == 409) {
           return serverMessage.isNotEmpty ? serverMessage : "Bạn đã đánh giá phim này rồi.";
+        } else {
+          return serverMessage.isNotEmpty ? serverMessage : "Lỗi $status từ máy chủ. Vui lòng thử lại.";
         }
       }
-      return "Lỗi kết nối Server (${e.type}). Vui lòng thử lại.";
-    } catch (e, stacktrace) {
-      print('❌ [RatingProvider] Lỗi hệ thống không xác định tại submitRating: $e');
-      print('📌 StackTrace: $stacktrace');
+      return "Lỗi kết nối (${e.type}). Vui lòng thử lại.";
+    } catch (e) {
+      debugPrint('[RatingProvider] Unexpected error at submitRating: $e');
       return "Đã xảy ra lỗi hệ thống: $e";
     }
   }

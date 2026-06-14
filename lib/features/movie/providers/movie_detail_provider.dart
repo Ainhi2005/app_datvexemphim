@@ -1,6 +1,5 @@
 // lib/presentation/movie/providers/movie_detail_provider.dart
 import 'package:flutter/material.dart';
-import '../../../data/models/movie.dart';
 import '../../../data/models/showtime.dart';
 import '../../../data/services/movie_api_service.dart';
 // Giả định bạn có ShowtimeApiService riêng, hoặc tích hợp chung vào MovieApiService
@@ -53,7 +52,7 @@ class MovieDetailProvider extends ChangeNotifier {
 
     } catch (e) {
       _error = e.toString();
-      print("❌ Error in MovieDetailProvider: $e");
+      debugPrint('MovieDetailProvider error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -1,17 +1,19 @@
-﻿// lib/features/profile/screens/profile_screen.dart
+// lib/features/profile/screens/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_strings.dart'; 
+import '../../../core/constants/app_strings.dart';
 import '../../../routes/app_routes.dart';
-import '../providers/profile_provider.dart'; 
+import '../providers/profile_provider.dart';
+import '../widgets/profile_header.dart';
+import '../widgets/profile_menu_item.dart';
 import 'change_language_screen.dart';
 import 'change_password_screen.dart';
-import 'edit_profile_screen.dart'; 
 import '../../../core/utils/snackbar_utils.dart';
-import '../../../core/widgets/error_view.dart'; // 1. IMPORT THÊM WIDGET ERROR_VIEW CỦA BẠN
-import '../../auth/providers/auth_provider.dart'; 
+import '../../../core/widgets/error_view.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../ticket/screens/ticket_list_screen.dart';
+import '../../../core/constants/app_text_styles.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -33,22 +35,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: Navigator.canPop(context)
+          ? AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: Consumer<ProfileProvider>(
           builder: (context, provider, child) {
-            // Kiểm tra trạng thái đang tải dữ liệu
             if (provider.isLoading && provider.user == null) {
-              return const Center(child: CircularProgressIndicator(color: AppColors.secondary));
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.secondary),
+              );
             }
 
-            // 2. CHÈN THÊM ĐOẠN CHECK LỖI ĐỘNG VÀO ĐÂY:
-            // Nếu có lỗi mạng/hệ thống xảy ra và bộ nhớ đệm chưa có dữ liệu user cũ
             if (provider.error != null && provider.user == null) {
               return ErrorView(
-                message: provider.error!, // Truyền lỗi động dạng tiếng Việt thân thiện
-                onRetry: () {
-                  provider.fetchProfile(); // Thực thi gọi lại API khi ấn nút "Thử lại"
-                },
+                message: provider.error!,
+                onRetry: () => provider.fetchProfile(),
               );
             }
 
@@ -60,70 +69,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  // User Info
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: AppColors.surface,
-                        backgroundImage: user?.avatarUrl != null ? NetworkImage(user!.avatarUrl!) : null,
-                        child: user?.avatarUrl == null
-                            ? const Icon(Icons.person, size: 40, color: AppColors.textSecondary)
-                            : null,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(user?.name ?? 'Tên người dùng', style: AppTextStyles.headlineMedium),
-                                IconButton(
-                                  icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary),
-                                  onPressed: () {
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen()));
-                                  },
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(Icons.phone_outlined, color: AppColors.textSecondary, size: 16),
-                                const SizedBox(width: 8),
-                                Text(user?.phone ?? 'Chưa cập nhật SĐT', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(Icons.email_outlined, color: AppColors.textSecondary, size: 16),
-                                const SizedBox(width: 8),
-                                Text(user?.email ?? 'Chưa cập nhật Email', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                  ProfileHeader(user: user),                  
                   const SizedBox(height: 40),
-                  // Menu Items
-                  _buildMenuItem(Icons.confirmation_num_outlined, AppStrings.myTickets, () {}),
-                  _buildMenuItem(Icons.shopping_cart_outlined, AppStrings.paymentHistory, () {}),
-                  _buildMenuItem(Icons.language_outlined, AppStrings.changeLanguage, () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ChangeLanguageScreen()));
-                  }),
-                  _buildMenuItem(Icons.lock_outline, AppStrings.changePassword, () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ChangePasswordScreen()));
-                  }),
+                  if(provider.isAdmin)...[ 
+                    ProfileMenuItem(
+                    icon: Icons.admin_panel_settings_outlined,
+                    title: 'Quản trị hệ thống ( Admin)',
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.adminDashboard),
+                  )
+                  ]
+                  ,
+                  ProfileMenuItem(
+                    icon: Icons.confirmation_num_outlined,
+                    title: AppStrings.myTickets,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const TicketListScreen()),
+                    ),
+                  ),
+                  ProfileMenuItem(
+                    icon: Icons.shopping_cart_outlined,
+                    title: AppStrings.paymentHistory,
+                    onTap: () => SnackbarUtils.showSuccess(
+                      context,
+                      'Chức năng lịch sử giao dịch đang được phát triển',
+                    ),
+                  ),
+                  ProfileMenuItem(
+                    icon: Icons.language_outlined,
+                    title: AppStrings.changeLanguage,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ChangeLanguageScreen()),
+                    ),
+                  ),
+                  ProfileMenuItem(
+                    icon: Icons.lock_outline,
+                    title: AppStrings.changePassword,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
+                    ),
+                  ),
                   const SizedBox(height: 24),
-                  // Nút Đăng xuất
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -131,18 +119,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         SnackbarUtils.showSuccess(context, 'Đang đăng xuất...');
                         await context.read<AuthProvider>().logout();
                         if (context.mounted) {
-                          Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
+                          context.read<ProfileProvider>().clearUser();
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            AppRoutes.login,
+                            (route) => false,
+                          );
                         }
                       },
-                      icon: const Icon(Icons.logout, color: AppColors.error),
+                      icon: const Icon(Icons.logout, color: AppColors.secondary),
                       label: Text(
                         AppStrings.logout,
-                        style: AppTextStyles.bodyLarge.copyWith(color: AppColors.error, fontWeight: FontWeight.bold),
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          color: AppColors.secondary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: AppColors.error),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(color: AppColors.secondary),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -153,21 +151,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
       ),
-    );
-  }
-
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
-    return Column(
-      children: [
-        ListTile(
-          leading: Icon(icon, color: AppColors.textPrimary, size: 26),
-          title: Text(title, style: AppTextStyles.bodyLarge),
-          trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-          contentPadding: const EdgeInsets.symmetric(vertical: 4),
-          onTap: onTap,
-        ),
-        Divider(color: Colors.grey.withOpacity(0.2), height: 1),
-      ],
     );
   }
 }

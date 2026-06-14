@@ -1,4 +1,4 @@
-﻿// lib/data/models/auth_response_model.dart
+// lib/data/models/auth_response_model.dart
 class AuthResponseModel {
   final String accessToken;
   final String refreshToken;

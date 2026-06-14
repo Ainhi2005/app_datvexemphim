@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/news_card.dart';
 import '../../../data/models/movie.dart';
@@ -15,7 +15,7 @@ class NewsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Movie news', showSeeAll: false),
+        const SectionHeader(title: 'Tin tức phim', showSeeAll: false),
         const SizedBox(height: 12),
         SizedBox(
           height: 280,

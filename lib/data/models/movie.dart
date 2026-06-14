@@ -1,4 +1,4 @@
-﻿import 'package:intl/intl.dart';
+import 'package:intl/intl.dart';
 
 class Movie {
   final int id;
@@ -33,19 +33,19 @@ class Movie {
 
   factory Movie.fromJson(Map<String, dynamic> json) {
     return Movie(
-      id: json['id'],
-      title: json['title'],
-      duration: json['duration'],
-      genres: List<String>.from(json['genres']),
-      directors: List<String>.from(json['directors']),
-      releaseDate: DateTime.parse(json['releaseDate']),
-      endDate: DateTime.parse(json['endDate']),
-      status: json['status'],
-      posterUrl: json['posterUrl'],
+      id: json['id'] ?? 0,
+      title: json['title'] ?? '',
+      duration: json['duration'] ?? 0,
+      genres: json['genres'] != null ? List<String>.from(json['genres']) : [],
+      directors: json['directors'] != null ? List<String>.from(json['directors']) : [],
+      releaseDate: DateTime.tryParse(json['releaseDate'] ?? json['release_date'] ?? '') ?? DateTime.now(),
+      endDate: DateTime.tryParse(json['endDate'] ?? json['end_date'] ?? '') ?? DateTime.now(),
+      status: json['status'] ?? '',
+      posterUrl: json['posterUrl'] ?? json['poster_url'] ?? '',
       description: json['description'] ?? '',
-      ageRating: json['ageRating'] ?? '',
+      ageRating: json['ageRating'] ?? json['age_rating'] ?? '',
       language: json['language'] ?? '',
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: DateTime.tryParse(json['createdAt'] ?? json['created_at'] ?? '') ?? DateTime.now(),
     );
   }
 

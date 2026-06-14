@@ -1,8 +1,5 @@
-// lib/features/auth/screens/register_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../core/widgets/custom_app_bar.dart';
@@ -11,6 +8,9 @@ import '../../../core/widgets/auth_text_field.dart';
 import '../../../routes/app_routes.dart';
 import '../providers/auth_provider.dart';
 import 'register_username_screen.dart';
+import '../widgets/auth_button.dart';
+import '../widgets/auth_link_button.dart';
+import '../widgets/terms_text.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -128,47 +128,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _confirmController,
                     obscureText: true,
                     validator: (value) {
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return AppStrings.pleaseConfirmPassword;
-                      if (value != _passwordController.text)
+                      }
+                      if (value != _passwordController.text) {
                         return AppStrings.passwordNotMatch;
+                      }
                       return null;
                     },
                   ),
                   const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: isLoading ? null : _handleContinue,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      AppStrings.continueBtn,
-                      style: AppTextStyles.button,
-                    ),
+                  AuthButton(
+                    text: AppStrings.continueBtn,
+                    onPressed: _handleContinue,
+                    isLoading: isLoading,
                   ),
                   const SizedBox(height: 24),
-                  TextButton(
+                  AuthLinkButton(
+                    text: AppStrings.alreadyHaveAccount,
                     onPressed: () {
                       Navigator.pushReplacementNamed(context, AppRoutes.login);
                     },
-                    child: Text(
-                      AppStrings.alreadyHaveAccount,
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: AppColors.secondary,
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    AppStrings.termsAndPrivacy,
-                    style: AppTextStyles.bodyMedium.copyWith(fontSize: 10),
-                    textAlign: TextAlign.center,
-                  ),
+                  const TermsText(),
                 ],
               ),
             ),

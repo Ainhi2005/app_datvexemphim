@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/section_header.dart';
@@ -13,10 +12,15 @@ import '../widgets/search_bar.dart';
 import '../widgets/news_section.dart';
 import '../../movie/screens/movie_screen.dart';
 import '../../../data/models/movie.dart';
-import '../../profile/providers/profile_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
@@ -24,34 +28,6 @@ class HomeScreen extends StatelessWidget {
       create: (_) => HomeProvider(),
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text('Trang Chủ', style: AppTextStyles.headlineMedium),
-          centerTitle: false,
-          actions: [
-            Consumer<ProfileProvider>(
-              builder: (context, profileProvider, child) {
-                final user = profileProvider.user;
-                return Container(
-                  margin: const EdgeInsets.only(right: 16),
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppColors.surface,
-                    backgroundImage: user?.avatarUrl != null
-                        ? NetworkImage(user!.avatarUrl!)
-                        : null,
-                    child: user?.avatarUrl == null
-                        ? const Icon(
-                            Icons.person,
-                            size: 20,
-                            color: AppColors.textSecondary,
-                          )
-                        : null,
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
         body: Consumer<HomeProvider>(
           builder: (context, provider, child) {
             if (provider.isLoading) return const LoadingIndicator();
@@ -62,22 +38,31 @@ class HomeScreen extends StatelessWidget {
               );
             }
 
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const HomeHeader(),
-                  const SizedBox(height: 24),
-                  const HomeSearchBar(),
-                  const SizedBox(height: 24),
-                  _buildNowPlayingSection(context, provider.nowPlaying),
-                  const SizedBox(height: 32),
-                  _buildComingSoonSection(context, provider.comingSoon),
-                  const SizedBox(height: 24),
-                  NewsSection(movies: provider.newsMovies),
-                  const SizedBox(height: 80),
-                ],
-              ),
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: SafeArea(
+                    bottom: false,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 20),
+                        const HomeHeader(),
+                        const SizedBox(height: 20),
+                        const HomeSearchBar(),
+                        const SizedBox(height: 24),
+                        _buildNowPlayingSection(context, provider.nowPlaying),
+                        const SizedBox(height: 32),
+                        _buildComingSoonSection(context, provider.comingSoon),
+                        const SizedBox(height: 24),
+                        NewsSection(movies: provider.newsMovies),
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -98,7 +83,10 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        NowPlayingCarousel(movies: movies),
+        NowPlayingCarousel(
+          movies: movies,
+          onPageChanged: (_) {},
+        ),
       ],
     );
   }
@@ -115,7 +103,7 @@ class HomeScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const MovieScreen()),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         HorizontalMovieList(movies: movies, isNowPlaying: false),
       ],
     );

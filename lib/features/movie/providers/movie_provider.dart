@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../data/models/movie.dart';  // ĐỔI sang movie
 import '../../../data/services/movie_api_service.dart';  // Dùng API service
 
@@ -19,6 +19,14 @@ class MovieProvider extends ChangeNotifier {
     fetchMovies();
   }
 
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
   Future<void> fetchMovies() async {
     _isLoading = true;
     _error = null;
@@ -34,13 +42,15 @@ class MovieProvider extends ChangeNotifier {
       _nowPlayingMovies = results[0];
       _comingSoonMovies = results[1];
 
-      print('✅ Loaded: ${_nowPlayingMovies.length} now playing, ${_comingSoonMovies.length} coming soon');
+      debugPrint('Loaded: ${_nowPlayingMovies.length} now playing, ${_comingSoonMovies.length} coming soon');
     } catch (e) {
       _error = e.toString();
-      print('❌ Error: $e');
+      debugPrint('MovieProvider error: $e');
     } finally {
       _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) {
+        notifyListeners();
+      }
     }
   }
 }

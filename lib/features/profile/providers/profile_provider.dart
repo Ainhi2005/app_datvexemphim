@@ -14,10 +14,18 @@ class ProfileProvider extends ChangeNotifier {
   String? _error;
 
   UserModel? get user => _user;
+  bool get isAdmin => _user?.role == 'admin';
   bool get isLoading => _isLoading;
   String? get error => _error;
 
   void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  /// Xóa sạch thông tin user (gọi khi đăng xuất hoặc vào chế độ khách)
+  void clearUser() {
+    _user = null;
     _error = null;
     notifyListeners();
   }
@@ -49,11 +57,18 @@ class ProfileProvider extends ChangeNotifier {
 
     try {
       final Map<String, dynamic> data = {};
-      if (name != null && name.isNotEmpty) data['name'] = name;
-      if (phone != null && phone.isNotEmpty) data['phone'] = phone;
-      if (dob != null && dob.isNotEmpty) data['dateOfBirth'] = dob;
-      if (avatarUrl != null && avatarUrl.isNotEmpty)
+      if (name != null && name.isNotEmpty) {
+        data['name'] = name;
+      }
+      if (phone != null && phone.isNotEmpty) {
+        data['phone'] = phone;
+      }
+      if (dob != null && dob.isNotEmpty) {
+        data['dateOfBirth'] = dob;
+      }
+      if (avatarUrl != null && avatarUrl.isNotEmpty) {
         data['avatarUrl'] = avatarUrl;
+      }
 
       _user = await _repository.updateProfile(data);
       _isLoading = false;
@@ -97,7 +112,7 @@ class ProfileProvider extends ChangeNotifier {
       // Thiết lập MultipartFile gửi file vật lý từ ổ đĩa máy điện thoại
       String fileName = filePath.split('/').last;
       FormData formData = FormData.fromMap({
-        "image": await MultipartFile.fromFile(filePath, filename: fileName), 
+        "image": await MultipartFile.fromFile(filePath, filename: fileName),
       });
 
       // Gọi API đến router upload của Node.js

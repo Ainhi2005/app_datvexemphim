@@ -1,4 +1,5 @@
-﻿import '../../core/utils/dio_client.dart';
+import 'package:flutter/foundation.dart';
+import '../../core/utils/dio_client.dart';
 
 class AuthApiService {
   final _dioClient = DioClient();
@@ -30,8 +31,8 @@ class AuthApiService {
     try {
       await _dioClient.dio.post('/auth/signOut');
     } catch (e) {
-      // Có thể bỏ qua lỗi ở đây vì dù server có lỗi, ta vẫn phải cho user đăng xuất ở app
-      print('Lỗi gọi API signOut: $e');
+      // C� th? b? qua l?i ? d�y v� d� server c� l?i, ta v?n ph?i cho user dang xu?t ? app
+      debugPrint('L?i g?i API signOut: $e');
     }
   }
 

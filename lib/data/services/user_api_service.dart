@@ -33,4 +33,19 @@ class UserApiService {
     final response = await _dioClient.dio.post('/upload/image', data: formData);
     return response.data;
   }
+
+  // ── Lấy danh sách tất cả người dùng (Admin) ──
+  Future<Map<String, dynamic>> getAllUsers() async {
+    final response = await _dioClient.dio.get('/users');
+    return response.data;
+  }
+
+  // ── Cập nhật vai trò người dùng (Admin) ──
+  Future<Map<String, dynamic>> updateUserRole(int userId, String role) async {
+    final response = await _dioClient.dio.patch(
+      '/users/$userId/role',
+      data: {'role': role},
+    );
+    return response.data;
+  }
 }

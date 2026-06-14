@@ -58,39 +58,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
-
-  Future<bool> loginWithFacebook() async {
-    _setLoading(true);
-    _errorMessage = null;
-    try {
-      final authResponse = await _repository.loginWithFacebook();
-      _token = authResponse.accessToken; // 💡 GĂM TOKEN
-      _setLoading(false);
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = ErrorHandler.handle(e).message;
-      _setLoading(false);
-      return false;
-    }
-  }
-
-  Future<bool> loginWithGoogle() async {
-    _setLoading(true);
-    _errorMessage = null;
-    try {
-      final authResponse = await _repository.loginWithGoogle();
-      _token = authResponse.accessToken; // 💡 GĂM TOKEN
-      _setLoading(false);
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = ErrorHandler.handle(e).message;
-      _setLoading(false);
-      return false;
-    }
-  }
-
+  
   Future<bool> register(String email, String username, String password) async {
     _setLoading(true);
     _errorMessage = null;
@@ -113,10 +81,10 @@ class AuthProvider extends ChangeNotifier {
       await _repository.logout();
       _token = null; // 💡 Xóa sạch vết token trên RAM khi đăng xuất
     } catch (e) {
-      print('Lỗi đăng xuất: $e');
+      debugPrint('Lỗi đăng xuất: $e');
     } finally {
       _setLoading(false);
       notifyListeners();
     }
   }
-}
+}

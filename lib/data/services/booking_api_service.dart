@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../core/constants/api_constants.dart';
 
@@ -12,7 +13,7 @@ class BookingApiService {
   // 💡 CHUẨN HÓA THEO ENDPOINT THẬT: Đổi từ showtimeId sang roomId và dùng phương thức GET
   Future<Response> getSeatsByRoom(int roomId) async {
     try {
-      print("🚀 [API Ghế] Đang gọi GET tới: ${ApiConstants.baseUrl}/rooms/$roomId/seats");
+      debugPrint("🚀 [API Ghế] Đang gọi GET tới: ${ApiConstants.baseUrl}/rooms/$roomId/seats");
       
       // Khớp 100% với endpoint: GET /rooms/:roomId/seats
       // (Nhớ thêm /api ở trước nếu tất cả endpoint của BE đều nằm sau router /api)
@@ -23,7 +24,7 @@ class BookingApiService {
       
       return response;
     } catch (e) {
-      print("❌ Lỗi gọi API lấy sơ đồ ghế từ Room: $e");
+      debugPrint("❌ Lỗi gọi API lấy sơ đồ ghế từ Room: $e");
       rethrow;
     }
   }
@@ -33,7 +34,7 @@ class BookingApiService {
     try {
       return await _dio.post('/bookings', data: bookingData);
     } catch (e) {
-      print("❌ Lỗi API đặt vé: $e");
+      debugPrint("❌ Lỗi API đặt vé: $e");
       rethrow;
     }
   }

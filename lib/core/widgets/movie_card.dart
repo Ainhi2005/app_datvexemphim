@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../../data/models/movie.dart';
+import '../../routes/app_routes.dart';
 
 class MovieCard extends StatelessWidget {
   final Movie movie;
@@ -119,46 +120,82 @@ class MovieCard extends StatelessWidget {
         ),
       );
     } else {
-      return Container(
-        width: 160,
-        margin: const EdgeInsets.only(right: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                movie.posterUrl,
+      return GestureDetector(
+        onTap: () {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.movieDetail,
+            arguments: movie,
+          );
+        },
+        child: Container(
+          width: 140,
+          margin: const EdgeInsets.only(right: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
                 height: 200,
                 width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 200,
-                  color: AppColors.cardColor,
-                  child: const Icon(Icons.movie, size: 40, color: AppColors.textSecondary),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    movie.posterUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: AppColors.cardColor,
+                      child: const Icon(Icons.movie, size: 40, color: AppColors.textSecondary),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              movie.title,
-              style: AppTextStyles.titleSmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            // SỬA: dùng formattedGenres
-            Text(movie.formattedGenres, style: AppTextStyles.bodyMedium, maxLines: 1),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 10, color: AppColors.textSecondary),
-                const SizedBox(width: 4),
-                // SỬA: dùng formattedReleaseDate (String)
-                Text(movie.formattedReleaseDate, style: AppTextStyles.bodyMedium.copyWith(fontSize: 10)),
-              ],
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                movie.title,
+                style: AppTextStyles.titleSmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                movie.formattedGenres,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.white60,
+                  fontSize: 12,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(Icons.calendar_month_rounded, size: 12, color: AppColors.secondary),
+                  const SizedBox(width: 4),
+                  Text(
+                    movie.formattedReleaseDate,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontSize: 12,
+                      color: AppColors.secondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }

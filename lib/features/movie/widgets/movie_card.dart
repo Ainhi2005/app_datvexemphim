@@ -1,5 +1,4 @@
-﻿import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
+import 'package:flutter/material.dart';
 import '../../../data/models/movie_detail.dart';
 
 class MovieCard extends StatelessWidget {
@@ -21,7 +20,7 @@ class MovieCard extends StatelessWidget {
             image: NetworkImage(movie.imageUrl),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.3),
+              Colors.black.withValues(alpha: 0.3),
               BlendMode.darken,
             ),
           ),

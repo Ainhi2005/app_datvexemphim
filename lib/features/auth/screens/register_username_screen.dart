@@ -4,6 +4,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../routes/app_routes.dart';
+import '../widgets/auth_button.dart';
 
 class RegisterUsernameScreen extends StatelessWidget {
   final String username;
@@ -48,17 +49,9 @@ class RegisterUsernameScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            ElevatedButton(
+            AuthButton(
+              text: AppStrings.continueBtn,
               onPressed: () => _handleDone(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.secondary,
-                foregroundColor: AppColors.textButton,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(AppStrings.continueBtn, style: AppTextStyles.button),
             ),
           ],
         ),

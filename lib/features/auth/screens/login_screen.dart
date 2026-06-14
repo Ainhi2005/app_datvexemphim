@@ -1,8 +1,5 @@
-// lib/features/auth/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../core/widgets/custom_app_bar.dart';
@@ -10,7 +7,12 @@ import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/auth_text_field.dart';
 import '../../../routes/app_routes.dart';
 import '../providers/auth_provider.dart';
+import '../../profile/providers/profile_provider.dart';
 import '../../../core/utils/remember_me_storage.dart';
+import '../widgets/auth_button.dart';
+import '../widgets/auth_link_button.dart';
+import '../widgets/remember_me_checkbox.dart';
+import '../widgets/terms_text.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -61,8 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authProvider = context.read<AuthProvider>();
 
-    
-
     // Thực hiện gọi API đăng nhập
     final success = await authProvider.loginWithEmail(
       _emailController.text.trim(),
@@ -73,15 +73,27 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      // THỰC HIỆN LƯU MẬT KHẨU KHI THÀNH CÔNG
       await RememberMeStorage.saveCredentials(
         rememberMe: _rememberMe,
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      // Điều hướng về trang MainScreen có thanh Bottom Navigation
-      Navigator.pushReplacementNamed(context, AppRoutes.main);
+      if (!mounted) return;
+
+      // Tải thông tin Profile để kiểm tra vai trò (Role)
+      final profileProvider = context.read<ProfileProvider>();
+      await profileProvider.fetchProfile();
+
+      if (!mounted) return;
+
+      if (profileProvider.isAdmin) {
+        // Nếu là Admin, hiển thị lựa chọn đường đi
+        _showRoleSelectionDialog(context);
+      } else {
+        // Điều hướng về trang MainScreen thông thường
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.main, (route) => false);
+      }
     } else {
       // BẮT LỖI ĐỘNG: Hiển thị Snackbar thông điệp lỗi chuẩn từ Backend
       if (authProvider.errorMessage != null) {
@@ -89,6 +101,57 @@ class _LoginScreenState extends State<LoginScreen> {
         authProvider.clearError(); // Dọn dẹp bộ nhớ lỗi sau khi hiển thị
       }
     }
+  }
+
+  void _showRoleSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Center(
+          child: Text(
+            'QUYỀN TRUY CẬP ADMIN',
+            style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Tài khoản của bạn có quyền Quản trị viên. Bạn muốn tiếp tục vào trang quản trị hay vào trải nghiệm đặt vé?',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                Navigator.pushNamedAndRemoveUntil(context, AppRoutes.adminDashboard, (route) => false);
+              },
+              child: const Text('Vào Trang Quản Trị', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.amber),
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                Navigator.pushNamedAndRemoveUntil(context, AppRoutes.main, (route) => false);
+              },
+              child: const Text('Trải Nghiệm Mua Vé', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -135,68 +198,32 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? AppStrings.pleaseEnterPassword
                           : null,
                     ),
-                    Row(
-                      children: [
-                        Theme(
-                          data: Theme.of(context).copyWith(
-                            unselectedWidgetColor: AppColors.textSecondary,
-                          ),
-                          child: Checkbox(
-                            value: _rememberMe,
-                            activeColor: AppColors.secondary,
-                            checkColor: Colors.black,
-                            onChanged: (value) {
-                              setState(() {
-                                _rememberMe = value ?? false;
-                              });
-                            },
-                          ),
-                        ),
-                        Text(
-                          'Nhớ mật khẩu',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
+                    RememberMeCheckbox(
+                      value: _rememberMe,
+                      onChanged: (value) {
+                        setState(() {
+                          _rememberMe = value ?? false;
+                        });
+                      },
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: isLoading ? null : _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        AppStrings.continueBtn,
-                        style: AppTextStyles.button,
-                      ),
+                    AuthButton(
+                      text: AppStrings.continueBtn,
+                      onPressed: _handleLogin,
+                      isLoading: isLoading,
                     ),
                     const SizedBox(height: 24),
-                    TextButton(
+                    AuthLinkButton(
+                      text: AppStrings.dontHaveAccount,
                       onPressed: () {
                         Navigator.pushReplacementNamed(
                           context,
                           AppRoutes.register,
                         );
                       },
-                      child: Text(
-                        AppStrings.dontHaveAccount,
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          color: AppColors.secondary,
-                        ),
-                      ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      AppStrings.termsAndPrivacy,
-                      style: AppTextStyles.bodyMedium.copyWith(fontSize: 10),
-                      textAlign: TextAlign.center,
-                    ),
+                    const TermsText(),
                   ],
                 ),
               ),

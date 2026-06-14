@@ -1,5 +1,4 @@
 // lib/features/profile/screens/edit_profile_screen.dart
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +7,8 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../providers/profile_provider.dart';
+import '../widgets/avatar_picker.dart';
+import '../widgets/profile_text_field.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -59,27 +60,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  // === HÀM XỬ LÝ LƯU THÔNG TIN VÀ UPLOAD ẢNH ĐƯỢC TÁCH RA ===
   Future<void> _onSave() async {
     final provider = context.read<ProfileProvider>();
     String? avatarUrl;
 
-    // 1. Nếu người dùng có chọn ảnh mới -> Tiến hành upload trước
     if (_localAvatarPath != null) {
       avatarUrl = await provider.uploadAvatar(_localAvatarPath!);
-      
       if (!mounted) return;
-      
-      // Nếu upload ảnh thất bại (bị lỗi mạng, lỗi server CDN Cloudinary...)
       if (avatarUrl == null) {
-        if (provider.error != null) {
-          SnackbarUtils.showError(context, provider.error!);
-        }
-        return; // Dừng tiến trình không lưu thông tin nữa
+        if (provider.error != null) SnackbarUtils.showError(context, provider.error!);
+        return;
       }
     }
 
-    // 2. Tiến hành cập nhật thông tin profile kèm theo url ảnh mới (nếu có)
     final success = await provider.updateProfile(
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
@@ -93,10 +86,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       SnackbarUtils.showSuccess(context, AppStrings.updateProfileSuccess);
       Navigator.pop(context);
     } else {
-      if (provider.error != null) {
-        // Bắt lỗi động từ API (Ví dụ: "Số điện thoại đã tồn tại")
-        SnackbarUtils.showError(context, provider.error!);
-      }
+      if (provider.error != null) SnackbarUtils.showError(context, provider.error!);
     }
   }
 
@@ -120,43 +110,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            Center(
-              child: GestureDetector(
-                onTap: _pickImage,
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: AppColors.surface,
-                      backgroundImage: _localAvatarPath != null
-                          ? FileImage(File(_localAvatarPath!)) as ImageProvider
-                          : (user?.avatarUrl != null ? NetworkImage(user!.avatarUrl!) : null),
-                      child: _localAvatarPath == null && user?.avatarUrl == null
-                          ? const Icon(Icons.person, size: 50, color: AppColors.textSecondary)
-                          : null,
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(color: AppColors.secondary, shape: BoxShape.circle),
-                        child: const Icon(Icons.camera_alt, color: AppColors.textButton, size: 18),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            AvatarPicker(
+              localAvatarPath: _localAvatarPath,
+              networkAvatarUrl: user?.avatarUrl,
+              onTap: _pickImage,
             ),
             const SizedBox(height: 32),
-            _buildTextField(AppStrings.fullName, Icons.person_outline, _nameController),
+            ProfileTextField(
+              label: AppStrings.fullName,
+              icon: Icons.person_outline,
+              controller: _nameController,
+            ),
             const SizedBox(height: 16),
-            _buildTextField(AppStrings.phoneNumber, Icons.phone_outlined, _phoneController),
+            ProfileTextField(
+              label: AppStrings.phoneNumber,
+              icon: Icons.phone_outlined,
+              controller: _phoneController,
+            ),
             const SizedBox(height: 16),
-            _buildTextField(
-              AppStrings.dateOfBirth,
-              Icons.calendar_today_outlined,
-              _dobController,
+            ProfileTextField(
+              label: AppStrings.dateOfBirth,
+              icon: Icons.calendar_today_outlined,
+              controller: _dobController,
               readOnly: true,
               onTap: () async {
                 DateTime? pickedDate = await showDatePicker(
@@ -167,7 +142,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 );
                 if (pickedDate != null) {
                   setState(() {
-                    _dobController.text = "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+                    _dobController.text =
+                        "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
                   });
                 }
               },
@@ -177,40 +153,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                // GỌI HÀM VỪA TÁCH
                 onPressed: provider.isLoading ? null : _onSave,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.secondary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                 ),
                 child: provider.isLoading
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                      )
                     : Text(
                         AppStrings.saveChanges,
-                        style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textButton, fontWeight: FontWeight.bold),
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          color: AppColors.textButton,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, IconData icon, TextEditingController controller, {bool readOnly = false, VoidCallback? onTap}) {
-    return TextFormField(
-      controller: controller,
-      readOnly: readOnly,
-      onTap: onTap,
-      style: const TextStyle(color: AppColors.textPrimary),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-        prefixIcon: Icon(icon, color: AppColors.textSecondary),
-        filled: true,
-        fillColor: AppColors.background,
-        enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.surface, width: 1)),
-        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.secondary, width: 1)),
       ),
     );
   }

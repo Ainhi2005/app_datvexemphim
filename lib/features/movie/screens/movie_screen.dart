@@ -6,6 +6,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/error_view.dart';
 import '../widgets/movie_grid.dart';
+import '../widgets/movie_tab_bar.dart';
 
 class MovieScreen extends StatefulWidget {
   const MovieScreen({super.key});
@@ -42,7 +43,14 @@ class _MovieScreenState extends State<MovieScreen> {
             return Column(
               children: [
                 // Tab Bar
-                _buildTabBar(),
+                MovieTabBar(
+                  selectedTab: _selectedTab,
+                  onTabChanged: (index) {
+                    setState(() {
+                      _selectedTab = index;
+                    });
+                  },
+                ),
                 // Danh sách phim
                 Expanded(
                   child: _selectedTab == 0
@@ -52,67 +60,6 @@ class _MovieScreenState extends State<MovieScreen> {
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: AppColors.cardColor,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedTab = 0),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: _selectedTab == 0 ? AppColors.secondary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Now playing',
-                      style: AppTextStyles.button.copyWith(
-                        color: _selectedTab == 0 ? AppColors.textButton : AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedTab = 1),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: _selectedTab == 1 ? AppColors.secondary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Coming soon',
-                      style: AppTextStyles.button.copyWith(
-                        color: _selectedTab == 1 ? AppColors.textButton : AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
