@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/constants/app_strings.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/avatar_picker.dart';
@@ -83,7 +83,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!mounted) return;
 
     if (success) {
-      SnackbarUtils.showSuccess(context, AppStrings.updateProfileSuccess);
+      SnackbarUtils.showSuccess(context, AppLocalizations.of(context)!.profile_update_success);
       Navigator.pop(context);
     } else {
       if (provider.error != null) SnackbarUtils.showError(context, provider.error!);
@@ -92,13 +92,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
     final provider = context.watch<ProfileProvider>();
     final user = provider.user;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(AppStrings.editProfile, style: AppTextStyles.headlineMedium),
+        title: Text(lang.profile_edit_profile, style: AppTextStyles.headlineMedium),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -117,19 +118,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 32),
             ProfileTextField(
-              label: AppStrings.fullName,
+              label: lang.profile_full_name,
               icon: Icons.person_outline,
               controller: _nameController,
             ),
             const SizedBox(height: 16),
             ProfileTextField(
-              label: AppStrings.phoneNumber,
+              label: lang.profile_phone_number,
               icon: Icons.phone_outlined,
               controller: _phoneController,
             ),
             const SizedBox(height: 16),
             ProfileTextField(
-              label: AppStrings.dateOfBirth,
+              label: lang.profile_date_of_birth,
               icon: Icons.calendar_today_outlined,
               controller: _dobController,
               readOnly: true,
@@ -165,7 +166,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
                       )
                     : Text(
-                        AppStrings.saveChanges,
+                        lang.profile_save_changes,
                         style: AppTextStyles.bodyLarge.copyWith(
                           color: AppColors.textButton,
                           fontWeight: FontWeight.bold,

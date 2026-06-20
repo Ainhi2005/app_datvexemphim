@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class BookingBottomBar extends StatelessWidget {
   final double totalPrice;
@@ -32,7 +33,7 @@ class BookingBottomBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "Tổng thanh toán",
+                  AppLocalizations.of(context)!.booking_total_payment,
                   style: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.5), fontSize: 13),
                 ),
                 const SizedBox(height: 4),
@@ -54,9 +55,9 @@ class BookingBottomBar extends StatelessWidget {
                 elevation: 0,
               ),
               onPressed: onSubmit,
-              child: const Text(
-                "Tiếp tục",
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)!.booking_continue,
+                style: const TextStyle(
                   color: Colors.black, // Vẫn giữ màu đen cho chữ trên nền vàng (AppColors.secondary)
                   fontWeight: FontWeight.bold,
                   fontSize: 16,

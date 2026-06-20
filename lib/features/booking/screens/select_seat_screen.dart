@@ -14,6 +14,7 @@ import '../widgets/seat_matrix.dart';
 import '../widgets/seat_status_legend.dart';
 import '../widgets/ticket_price_table.dart';
 import '../widgets/booking_bottom_bar.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class SelectSeatScreen extends StatefulWidget {
   const SelectSeatScreen({super.key});
@@ -46,7 +47,7 @@ class _SelectSeatScreenState extends State<SelectSeatScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Chọn Ghế", style: AppTextStyles.headlineMedium),
+        title: Text(AppLocalizations.of(context)!.booking_select_seat, style: AppTextStyles.headlineMedium),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,

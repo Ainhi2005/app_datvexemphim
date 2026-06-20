@@ -9,6 +9,7 @@ import '../../profile/screens/profile_screen.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../ticket/screens/ticket_list_screen.dart';
 import '../../auth/providers/auth_provider.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 // ================================================================
 // MAIN SCREEN - Nơi quản lý Bottom Navigation Bar CỐ ĐỊNH
@@ -58,12 +59,19 @@ class _MainScreenState extends State<MainScreen> {
     const ProfileScreen(),
   ];
 
-  final List<NavItem> _navItems = const [
-    NavItem(Icons.home, 'Trang chủ'),
-    NavItem(Icons.confirmation_num_outlined, 'Vé'),
-    NavItem(Icons.movie_outlined, 'Phim'),
-    NavItem(Icons.person_outline, 'Hồ sơ'),
-  ];
+  late List<NavItem> _navItems;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final lang = AppLocalizations.of(context)!;
+    _navItems = [
+      NavItem(Icons.home, lang.main_tab_home),
+      NavItem(Icons.confirmation_num_outlined, lang.main_tab_ticket),
+      NavItem(Icons.movie_outlined, lang.main_tab_movie),
+      NavItem(Icons.person_outline, lang.main_tab_profile),
+    ];
+  }
 
 
 
@@ -109,12 +117,12 @@ class _MainScreenState extends State<MainScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Yêu cầu đăng nhập', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text('Bạn cần đăng nhập để truy cập tính năng này.', style: TextStyle(color: Colors.grey)),
+        title: Text(AppLocalizations.of(context)!.common_login_required_title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(AppLocalizations.of(context)!.common_login_required_msg, style: const TextStyle(color: Colors.grey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+            child: Text(AppLocalizations.of(context)!.common_login_later, style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
@@ -122,7 +130,7 @@ class _MainScreenState extends State<MainScreen> {
               Navigator.pop(context);
               Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
             },
-            child: const Text('Đăng nhập', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.common_login, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

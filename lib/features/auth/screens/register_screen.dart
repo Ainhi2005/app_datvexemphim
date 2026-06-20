@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/constants/app_strings.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/loading_indicator.dart';
@@ -69,13 +69,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
     // TỐI ƯU: Chỉ watch duy nhất biến isLoading để tăng tốc độ render UI
     final isLoading = context.watch<AuthProvider>().isLoading;
 
     return Scaffold(
-      appBar: const CustomAppBar(title: AppStrings.signUp, actions: []),
+      appBar: CustomAppBar(title: lang.auth_sign_up, actions: const []),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -87,13 +87,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   const SizedBox(height: 20),
                   AuthTextField(
-                    hint: AppStrings.email,
+                    hint: lang.auth_email,
                     prefixIcon: Icons.email,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return AppStrings.pleaseEnterEmail;
+                        return lang.val_please_enter_email;
                       }
                       final emailRegex = RegExp(r"^[^\s@]+@[^\s@]+\.[^\s@]+$");
                       if (!emailRegex.hasMatch(value.trim())) {
@@ -104,48 +104,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
                   AuthTextField(
-                    hint: AppStrings.username,
+                    hint: lang.auth_username,
                     prefixIcon: Icons.person,
                     controller: _usernameController,
                     validator: (value) => value == null || value.isEmpty
-                        ? AppStrings.pleaseEnterUsername
+                        ? lang.val_please_enter_username
                         : null,
                   ),
                   const SizedBox(height: 16),
                   AuthTextField(
-                    hint: AppStrings.password,
+                    hint: lang.auth_password,
                     prefixIcon: Icons.lock_outline,
                     controller: _passwordController,
                     obscureText: true,
                     validator: (value) => value == null || value.isEmpty
-                        ? AppStrings.pleaseEnterPassword
+                        ? lang.val_please_enter_password
                         : null,
                   ),
                   const SizedBox(height: 16),
                   AuthTextField(
-                    hint: AppStrings.confirmPassword,
+                    hint: lang.auth_confirm_password,
                     prefixIcon: Icons.lock_outline,
                     controller: _confirmController,
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return AppStrings.pleaseConfirmPassword;
+                        return lang.val_please_confirm_password;
                       }
                       if (value != _passwordController.text) {
-                        return AppStrings.passwordNotMatch;
+                        return lang.val_password_not_match;
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 32),
                   AuthButton(
-                    text: AppStrings.continueBtn,
+                    text: lang.auth_continue_btn,
                     onPressed: _handleContinue,
                     isLoading: isLoading,
                   ),
                   const SizedBox(height: 24),
                   AuthLinkButton(
-                    text: AppStrings.alreadyHaveAccount,
+                    text: lang.auth_already_have_account,
                     onPressed: () {
                       Navigator.pushReplacementNamed(context, AppRoutes.login);
                     },

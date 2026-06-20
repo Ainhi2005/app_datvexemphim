@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/constants/app_strings.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/password_text_field.dart';
@@ -30,7 +30,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   Future<void> _onChangePassword() async {
     if (_newPwdController.text != _confirmPwdController.text) {
-      SnackbarUtils.showError(context, AppStrings.passwordNotMatch);
+      SnackbarUtils.showError(context, AppLocalizations.of(context)!.val_password_not_match);
       return;
     }
 
@@ -43,7 +43,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (!mounted) return;
 
     if (success) {
-      SnackbarUtils.showSuccess(context, AppStrings.changePasswordSuccess);
+      SnackbarUtils.showSuccess(context, AppLocalizations.of(context)!.profile_change_password_success);
       Navigator.pop(context);
     } else {
       if (provider.error != null) SnackbarUtils.showError(context, provider.error!);
@@ -52,12 +52,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
     final isLoading = context.watch<ProfileProvider>().isLoading;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(AppStrings.changePassword, style: AppTextStyles.headlineMedium),
+        title: Text(lang.profile_change_password, style: AppTextStyles.headlineMedium),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -70,17 +71,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         child: Column(
           children: [
             PasswordTextField(
-              hintText: AppStrings.currentPassword,
+              hintText: lang.profile_current_password,
               controller: _currentPwdController,
             ),
             const SizedBox(height: 16),
             PasswordTextField(
-              hintText: AppStrings.newPassword,
+              hintText: lang.profile_new_password,
               controller: _newPwdController,
             ),
             const SizedBox(height: 16),
             PasswordTextField(
-              hintText: AppStrings.confirmPassword,
+              hintText: lang.auth_confirm_password,
               controller: _confirmPwdController,
             ),
             const Spacer(),
@@ -100,7 +101,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
                       )
                     : Text(
-                        AppStrings.confirm,
+                        lang.profile_confirm,
                         style: AppTextStyles.bodyLarge.copyWith(
                           color: AppColors.textButton,
                           fontWeight: FontWeight.bold,

@@ -12,7 +12,7 @@ import 'features/movie/providers/movie_detail_provider.dart';
 import 'features/movie/providers/rating_provider.dart';
 import 'features/payment/providers/payment_provider.dart';
 import 'features/ticket/providers/ticket_provider.dart';
-
+import 'core/provider/locale_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final authProvider = AuthProvider();
@@ -24,7 +24,7 @@ void main() async {
       enabled: kReleaseMode, // kReleaseMode ? false : true,
       builder: (context) => MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => AuthProvider()),
+          ChangeNotifierProvider.value(value: authProvider),
           ChangeNotifierProvider(create: (_) => ProfileProvider()),
           ChangeNotifierProvider(create: (_) => MovieProvider()),
           ChangeNotifierProvider(create: (_) => ShowtimeProvider()),
@@ -32,8 +32,9 @@ void main() async {
           ChangeNotifierProvider(create: (_) => RatingProvider()),
           ChangeNotifierProvider(create: (_) => PaymentProvider()),
           ChangeNotifierProvider(create: (_) => TicketProvider()),
+          ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ],
-        child: const MyApp(),
+        child: MyApp(isAuthenticated: authProvider.isAuthenticated),
       ),
     ),
   );

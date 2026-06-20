@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_strings.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 import '../../../routes/app_routes.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/profile_header.dart';
@@ -33,6 +33,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: Navigator.canPop(context)
@@ -81,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ,
                   ProfileMenuItem(
                     icon: Icons.confirmation_num_outlined,
-                    title: AppStrings.myTickets,
+                    title: lang.profile_my_tickets,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const TicketListScreen()),
@@ -89,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   ProfileMenuItem(
                     icon: Icons.shopping_cart_outlined,
-                    title: AppStrings.paymentHistory,
+                    title: lang.profile_payment_history,
                     onTap: () => SnackbarUtils.showSuccess(
                       context,
                       'Chức năng lịch sử giao dịch đang được phát triển',
@@ -97,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   ProfileMenuItem(
                     icon: Icons.language_outlined,
-                    title: AppStrings.changeLanguage,
+                    title: lang.profile_language,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const ChangeLanguageScreen()),
@@ -105,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   ProfileMenuItem(
                     icon: Icons.lock_outline,
-                    title: AppStrings.changePassword,
+                    title: lang.profile_change_password,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
@@ -129,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                       icon: const Icon(Icons.logout, color: AppColors.secondary),
                       label: Text(
-                        AppStrings.logout,
+                        lang.profile_logout,
                         style: AppTextStyles.bodyLarge.copyWith(
                           color: AppColors.secondary,
                           fontWeight: FontWeight.bold,

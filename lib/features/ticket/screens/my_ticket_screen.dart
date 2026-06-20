@@ -9,7 +9,9 @@ import '../widgets/ticket_movie_info.dart';
 import '../widgets/ticket_date_row.dart';
 import '../widgets/ticket_info_row.dart';
 import '../widgets/ticket_dashed_line.dart';
+import '../widgets/ticket_dashed_line.dart';
 import '../widgets/ticket_qr_section.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class MyTicketScreen extends StatelessWidget {
   final Map<String, dynamic>? historyData;
@@ -22,10 +24,10 @@ class MyTicketScreen extends StatelessWidget {
     final bool isHistory = historyData != null;
 
     if (!isHistory && provider.selection == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
-          child: Text("Không có dữ liệu vé", style: TextStyle(color: Colors.white)),
+          child: Text(AppLocalizations.of(context)!.ticket_no_data, style: const TextStyle(color: Colors.white)),
         ),
       );
     }
@@ -35,7 +37,7 @@ class MyTicketScreen extends StatelessWidget {
     final Map<String, dynamic> movieInfo = showtimeInfo['movie'] ?? {};
 
     final String movieTitle =
-        isHistory ? (movieInfo['title'] ?? "Tên phim") : provider.selection!.movie.title;
+        isHistory ? (movieInfo['title'] ?? AppLocalizations.of(context)!.ticket_movie_title) : provider.selection!.movie.title;
     final String posterUrl =
         isHistory ? (movieInfo['posterUrl'] ?? "") : provider.selection!.movie.posterUrl;
 
@@ -47,14 +49,14 @@ class MyTicketScreen extends StatelessWidget {
     }
 
     final String roomNameText =
-        isHistory ? ("Phòng ${showtimeInfo['roomId'] ?? ''}") : provider.selection!.roomName;
+        isHistory ? ("${AppLocalizations.of(context)!.ticket_room}${showtimeInfo['roomId'] ?? ''}") : provider.selection!.roomName;
 
     final String cinemaNameText = isHistory
-        ? (showtimeInfo['cinema']?['name'] ?? "Hệ thống rạp chiếu")
+        ? (showtimeInfo['cinema']?['name'] ?? AppLocalizations.of(context)!.ticket_cinema_system)
         : provider.selection!.cinemaName;
 
     final String orderId =
-        isHistory ? historyData!['id'].toString() : (provider.confirmedOrderId ?? 'Đang xử lý');
+        isHistory ? historyData!['id'].toString() : (provider.confirmedOrderId ?? AppLocalizations.of(context)!.ticket_processing);
 
     final double totalPrice = isHistory
         ? double.tryParse(historyData!['totalPrice']?.toString() ?? '0') ?? 0.0
@@ -68,7 +70,7 @@ class MyTicketScreen extends StatelessWidget {
       seatsLabel = provider.selection!.selectedSeatLabels.join(', ');
     }
 
-    String comboText = "Không có combo";
+    String comboText = AppLocalizations.of(context)!.ticket_no_combo;
     if (isHistory &&
         historyData!['combos'] != null &&
         (historyData!['combos'] as List).isNotEmpty) {
@@ -81,7 +83,7 @@ class MyTicketScreen extends StatelessWidget {
       }
     }
 
-    String dateStr = "Đang cập nhật";
+    String dateStr = AppLocalizations.of(context)!.ticket_updating;
     String timeStr = "N/A";
     if (isHistory && showtimeInfo['startTime'] != null) {
       DateTime dt = DateTime.parse(showtimeInfo['startTime']).toLocal();
@@ -107,7 +109,7 @@ class MyTicketScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         appBar: AppBar(
           title: Text(
-            isHistory ? "Ticket Detail" : "Thanh toán thành công!",
+            isHistory ? AppLocalizations.of(context)!.ticket_detail_title : AppLocalizations.of(context)!.ticket_payment_success,
             style: AppTextStyles.titleLarge.copyWith(
               color: isHistory ? Colors.white : AppColors.secondary,
             ),
@@ -168,7 +170,7 @@ class MyTicketScreen extends StatelessWidget {
                               const SizedBox(height: 12),
                               TicketInfoRow(
                                 icon: Icons.location_on_outlined,
-                                text: "$cinemaNameText\nCơ sở hệ thống khả dụng",
+                                text: "$cinemaNameText\n${AppLocalizations.of(context)!.ticket_available_branch}",
                                 isBold: false,
                               ),
                               const SizedBox(height: 12),
@@ -202,7 +204,7 @@ class MyTicketScreen extends StatelessWidget {
                     const Icon(Icons.receipt_long, color: Colors.white70, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      "Show this barcode to the ticket\ncounter to receive your ticket",
+                      AppLocalizations.of(context)!.ticket_barcode_instruction,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: Colors.white,

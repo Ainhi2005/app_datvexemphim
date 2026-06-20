@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_text_styles.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class TicketDateRow extends StatelessWidget {
   final String timeStr;
@@ -41,7 +42,7 @@ class TicketDateRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(roomNameText, style: AppTextStyles.bodyMedium.copyWith(color: Colors.black54)),
-                Text("Seat $seatsLabel", style: AppTextStyles.titleMedium.copyWith(color: Colors.black)),
+                Text("${AppLocalizations.of(context)!.payment_seat} $seatsLabel", style: AppTextStyles.titleMedium.copyWith(color: Colors.black)),
               ],
             ),
           ],

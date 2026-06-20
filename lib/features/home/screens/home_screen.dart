@@ -12,6 +12,7 @@ import '../widgets/search_bar.dart';
 import '../widgets/news_section.dart';
 import '../../movie/screens/movie_screen.dart';
 import '../../../data/models/movie.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -76,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         SectionHeader(
-          title: 'Đang chiếu',
+          title: AppLocalizations.of(context)!.home_now_playing,
           onSeeAll: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const MovieScreen()),
@@ -97,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         SectionHeader(
-          title: 'Sắp chiếu',
+          title: AppLocalizations.of(context)!.home_coming_soon,
           onSeeAll: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const MovieScreen()),

@@ -11,6 +11,7 @@ import '../widgets/payment_discount_code_box.dart';
 import '../widgets/payment_method_tile.dart';
 import '../widgets/payment_bottom_action.dart';
 import '../../../data/models/booking_selection.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class PaymentScreen extends StatefulWidget {
   final BookingSelection selection;
@@ -36,7 +37,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text("Payment", style: AppTextStyles.titleLarge),
+        title: Text(AppLocalizations.of(context)!.payment_title, style: AppTextStyles.titleLarge),
         centerTitle: true,
         backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
@@ -55,18 +56,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                   const SizedBox(height: 16),
                   PaymentRowInfo(
-                    label: "Order ID",
-                    value: provider.confirmedOrderId?.toString() ?? "Chờ thanh toán",
+                    label: AppLocalizations.of(context)!.payment_order_id,
+                    value: provider.confirmedOrderId?.toString() ?? AppLocalizations.of(context)!.payment_pending,
                   ),
                   const SizedBox(height: 12),
                   PaymentRowInfo(
-                    label: "Seat",
+                    label: AppLocalizations.of(context)!.payment_seat,
                     value: widget.selection.selectedSeatLabels.join(', '),
                   ),
                   const SizedBox(height: 20),
                   const PaymentDiscountCodeBox(),
                   const SizedBox(height: 24),
-                  Text("Chọn combo ưu đãi", style: AppTextStyles.titleMedium),
+                  Text(AppLocalizations.of(context)!.payment_select_combo, style: AppTextStyles.titleMedium),
                   const SizedBox(height: 12),
                   ...List.generate(
                     provider.availableCombos.length,
@@ -80,7 +81,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Total", style: AppTextStyles.bodyLarge),
+                      Text(AppLocalizations.of(context)!.payment_total, style: AppTextStyles.bodyLarge),
                       Text(
                         "${provider.totalPrice.toInt()} VND",
                         style: AppTextStyles.titleLarge.copyWith(color: AppColors.secondary),
@@ -88,7 +89,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ],
                   ),
                   const SizedBox(height: 30),
-                  Text("Payment Method", style: AppTextStyles.titleMedium),
+                  Text(AppLocalizations.of(context)!.payment_method, style: AppTextStyles.titleMedium),
                   const SizedBox(height: 12),
                   PaymentMethodTile(provider: provider, title: "Zalo Pay", methodCode: "ZALOPAY", logoPath: "assets/zalopay.png"),
                   PaymentMethodTile(provider: provider, title: "MoMo", methodCode: "MOMO", logoPath: "assets/momo.png"),

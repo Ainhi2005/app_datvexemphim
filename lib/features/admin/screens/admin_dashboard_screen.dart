@@ -6,6 +6,7 @@ import 'package:tet/features/auth/providers/auth_provider.dart';
 import 'package:tet/features/profile/providers/profile_provider.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/admin_menu_button.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -38,7 +39,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Lỗi tải báo cáo tổng quan: $e');
+      debugPrint('${AppLocalizations.of(context)!.admin_error_loading_report}$e');
       setState(() => _isLoading = false);
     }
   }
@@ -48,8 +49,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF101010),
       appBar: AppBar(
-        title: const Text('Bảng Điều Khiển Admin',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.admin_dashboard_title,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF1A1A1A),
         elevation: 0,
         actions: [
@@ -74,8 +75,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Thống kê tổng quan',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.admin_overview_stats,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             if (_isLoading)
               const Center(
@@ -85,19 +86,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               )
             else ...[
-              StatCard(title: 'Doanh thu', value: '${_revenue.toStringAsFixed(0)} đ', color: Colors.green, isFullWidth: true),
+              StatCard(title: AppLocalizations.of(context)!.admin_revenue, value: '${_revenue.toStringAsFixed(0)}${AppLocalizations.of(context)!.admin_currency_unit}', color: Colors.green, isFullWidth: true),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(child: StatCard(title: 'Vé đã bán', value: '$_ticketsSold vé', color: Colors.amber)),
+                  Expanded(child: StatCard(title: AppLocalizations.of(context)!.admin_tickets_sold, value: '$_ticketsSold${AppLocalizations.of(context)!.admin_ticket_unit}', color: Colors.amber)),
                   const SizedBox(width: 8),
-                  Expanded(child: StatCard(title: 'Đang chiếu', value: '$_activeMovies phim', color: Colors.blue)),
+                  Expanded(child: StatCard(title: AppLocalizations.of(context)!.admin_active_movies, value: '$_activeMovies${AppLocalizations.of(context)!.admin_movie_unit}', color: Colors.blue)),
                 ],
               ),
             ],
             const SizedBox(height: 24),
-            const Text('Chức năng quản trị',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.admin_management_functions,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Expanded(
               child: GridView.count(
@@ -105,12 +106,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 children: [
-                  AdminMenuButton(title: 'Quản lý Phim', icon: Icons.movie, onTap: () => Navigator.pushNamed(context, AppRoutes.adminMovies)),
-                  AdminMenuButton(title: 'Quản lý Suất Chiếu', icon: Icons.schedule, onTap: () => Navigator.pushNamed(context, AppRoutes.adminShowtimes)),
-                  AdminMenuButton(title: 'Quản lý Người Dùng', icon: Icons.people, onTap: () => Navigator.pushNamed(context, AppRoutes.adminUsers)),
-                  AdminMenuButton(title: 'Quản lý Rạp & Phòng', icon: Icons.business, onTap: () => Navigator.pushNamed(context, AppRoutes.adminCinemas)),
-                  AdminMenuButton(title: 'Báo cáo doanh thu', icon: Icons.bar_chart, onTap: () => Navigator.pushNamed(context, AppRoutes.adminReports)),
-                  AdminMenuButton(title: 'Quản lý Combo', icon: Icons.fastfood, onTap: () => Navigator.pushNamed(context, AppRoutes.adminCombos)),
+                  AdminMenuButton(title: AppLocalizations.of(context)!.admin_manage_movies, icon: Icons.movie, onTap: () => Navigator.pushNamed(context, AppRoutes.adminMovies)),
+                  AdminMenuButton(title: AppLocalizations.of(context)!.admin_manage_showtimes, icon: Icons.schedule, onTap: () => Navigator.pushNamed(context, AppRoutes.adminShowtimes)),
+                  AdminMenuButton(title: AppLocalizations.of(context)!.admin_manage_users, icon: Icons.people, onTap: () => Navigator.pushNamed(context, AppRoutes.adminUsers)),
+                  AdminMenuButton(title: AppLocalizations.of(context)!.admin_manage_cinemas, icon: Icons.business, onTap: () => Navigator.pushNamed(context, AppRoutes.adminCinemas)),
+                  AdminMenuButton(title: AppLocalizations.of(context)!.admin_revenue_reports, icon: Icons.bar_chart, onTap: () => Navigator.pushNamed(context, AppRoutes.adminReports)),
+                  AdminMenuButton(title: AppLocalizations.of(context)!.admin_manage_combos, icon: Icons.fastfood, onTap: () => Navigator.pushNamed(context, AppRoutes.adminCombos)),
                 ],
               ),
             ),

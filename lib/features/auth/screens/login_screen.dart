@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/constants/app_strings.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/loading_indicator.dart';
@@ -30,7 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _loadRememberedCredentials();
+    _loadSavedAccounts();
+    
   }
 
   @override
@@ -41,20 +42,60 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // Load thông tin đã lưu khi vào màn hình
-  Future<void> _loadRememberedCredentials() async {
-    final remembered = await RememberMeStorage.isRemembered();
-    if (remembered) {
-      final email = await RememberMeStorage.getSavedEmail() ?? '';
-      final password = await RememberMeStorage.getSavedPassword() ?? '';
-      if (mounted) {
-        setState(() {
-          _rememberMe = true;
-          _emailController.text = email;
-          _passwordController.text = password;
-        });
-      }
+    List<Map<String, String>> _savedAccounts = [];
+
+  // Load thông tin đã lưu khi vào màn hình
+  Future<void> _loadSavedAccounts() async {
+    final accounts = await RememberMeStorage.getSavedAccounts();
+    if (mounted) {
+      setState(() {
+        _savedAccounts = accounts;
+      });
     }
   }
+
+  void _showSavedAccountsMenu() {
+    if (_savedAccounts.isEmpty) return;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (context) {
+        return ListView.builder(
+          shrinkWrap: true,
+          itemCount: _savedAccounts.length,
+          itemBuilder: (context, index) {
+            final acc = _savedAccounts[index];
+            return ListTile(
+              leading: const Icon(Icons.account_circle, color: Colors.grey, size: 36),
+              title: Text(acc['email'] ?? '', style: const TextStyle(color: Colors.white)),
+              onTap: () {
+                setState(() {
+                  _emailController.text = acc['email'] ?? '';
+                  _passwordController.text = acc['password'] ?? '';
+                  _rememberMe = true;
+                });
+                Navigator.pop(context);
+              },
+              trailing: IconButton(
+                icon: const Icon(Icons.close, color: Colors.redAccent),
+                onPressed: () async {
+                  await RememberMeStorage.removeAccount(acc['email']!);
+                  Navigator.pop(context);
+                  await _loadSavedAccounts();
+                  if (_savedAccounts.isNotEmpty) {
+                    _showSavedAccountsMenu();
+                  }
+                },
+              ),
+            );
+          },
+        );
+      }
+    );
+  }
+
 
   // === HÀM XỬ LÝ ĐĂNG NHẬP CHUẨN HOÁ ===
   Future<void> _handleLogin() async {
@@ -73,13 +114,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      await RememberMeStorage.saveCredentials(
-        rememberMe: _rememberMe,
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-
-      if (!mounted) return;
+      if (_rememberMe) {
+          await RememberMeStorage.saveAccount(
+            _emailController.text,
+            _passwordController.text,
+          );
+        } else {
+          await RememberMeStorage.removeAccount(_emailController.text);
+        }
 
       // Tải thông tin Profile để kiểm tra vai trò (Role)
       final profileProvider = context.read<ProfileProvider>();
@@ -110,19 +152,19 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Center(
+        title: Center(
           child: Text(
-            'QUYỀN TRUY CẬP ADMIN',
-            style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 18),
+            AppLocalizations.of(context)!.auth_admin_access,
+            style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 18),
           ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Tài khoản của bạn có quyền Quản trị viên. Bạn muốn tiếp tục vào trang quản trị hay vào trải nghiệm đặt vé?',
+            Text(
+              AppLocalizations.of(context)!.auth_admin_dialog_msg,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white, fontSize: 14),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -134,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () {
                 Navigator.pushNamedAndRemoveUntil(context, AppRoutes.adminDashboard, (route) => false);
               },
-              child: const Text('Vào Trang Quản Trị', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              child: Text(AppLocalizations.of(context)!.auth_admin_go_admin, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 12),
             OutlinedButton(
@@ -146,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () {
                 Navigator.pushNamedAndRemoveUntil(context, AppRoutes.main, (route) => false);
               },
-              child: const Text('Trải Nghiệm Mua Vé', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+              child: Text(AppLocalizations.of(context)!.auth_admin_go_user, style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -154,13 +196,14 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  @override
   Widget build(BuildContext context) {
+    // Lấy đối tượng dịch
+    final lang = AppLocalizations.of(context)!;
     // TỐI ƯU: Chỉ watch biến isLoading để render nút bấm và hiệu ứng xoay vòng
     final isLoading = context.watch<AuthProvider>().isLoading;
 
     return Scaffold(
-      appBar: const CustomAppBar(title: AppStrings.signIn, actions: []),
+      appBar: CustomAppBar(title: lang.auth_sign_in, actions: const []),
       body: Center(
         child: Stack(
           children: [
@@ -173,13 +216,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const SizedBox(height: 20),
                     AuthTextField(
-                      hint: AppStrings.email,
+                      hint: lang.auth_email,
                       prefixIcon: Icons.email,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      suffixIcon: _savedAccounts.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.arrow_drop_down, color: Colors.amber),
+                              onPressed: _showSavedAccountsMenu,
+                            )
+                          : null,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return AppStrings.pleaseEnterEmail;
+                          return lang.val_please_enter_email;
                         }
                         final emailRegex = RegExp(r"^[^\s@]+@[^\s@]+\.[^\s@]+$");
                         if (!emailRegex.hasMatch(value.trim())) {
@@ -190,12 +239,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     AuthTextField(
-                      hint: AppStrings.password,
+                      hint: lang.auth_password,
                       prefixIcon: Icons.lock_outline,
                       controller: _passwordController,
                       obscureText: true,
                       validator: (value) => value == null || value.isEmpty
-                          ? AppStrings.pleaseEnterPassword
+                          ? lang.val_please_enter_password
                           : null,
                     ),
                     RememberMeCheckbox(
@@ -208,13 +257,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     AuthButton(
-                      text: AppStrings.continueBtn,
+                      text: lang.auth_continue_btn,
                       onPressed: _handleLogin,
                       isLoading: isLoading,
                     ),
                     const SizedBox(height: 24),
                     AuthLinkButton(
-                      text: AppStrings.dontHaveAccount,
+                      text: lang.auth_dont_have_account,
                       onPressed: () {
                         Navigator.pushReplacementNamed(
                           context,

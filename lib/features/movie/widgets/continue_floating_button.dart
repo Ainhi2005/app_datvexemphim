@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/movie.dart';
 import '../../../routes/app_routes.dart';
@@ -22,12 +23,12 @@ class ContinueFloatingButton extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Yêu cầu đăng nhập', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text('Bạn cần đăng nhập để thực hiện đặt vé xem phim.', style: TextStyle(color: Colors.grey)),
+        title: Text(AppLocalizations.of(context)!.common_login_required_title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(AppLocalizations.of(context)!.common_login_required_booking_msg, style: const TextStyle(color: Colors.grey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+            child: Text(AppLocalizations.of(context)!.common_login_later, style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
@@ -35,7 +36,7 @@ class ContinueFloatingButton extends StatelessWidget {
               Navigator.pop(context);
               Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
             },
-            child: const Text('Đăng nhập', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.common_login, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

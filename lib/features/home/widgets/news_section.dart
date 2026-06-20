@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/news_card.dart';
 import '../../../data/models/movie.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class NewsSection extends StatelessWidget {
   final List<Movie> movies;
@@ -15,8 +16,8 @@ class NewsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Tin tức phim', showSeeAll: false),
-        const SizedBox(height: 12),
+        SectionHeader(title: AppLocalizations.of(context)!.home_movie_news, showSeeAll: false),
+        const SizedBox(height: 16),
         SizedBox(
           height: 280,
           child: ListView.builder(

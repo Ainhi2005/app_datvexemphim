@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class MovieTabBar extends StatelessWidget {
   final int selectedTab;
@@ -23,15 +24,15 @@ class MovieTabBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _buildTabItem('Đang chiếu', 0),
-            _buildTabItem('Sắp chiếu', 1),
+            _buildTabItem(context, AppLocalizations.of(context)!.home_now_playing, 0),
+            _buildTabItem(context, AppLocalizations.of(context)!.home_coming_soon, 1),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTabItem(String title, int index) {
+  Widget _buildTabItem(BuildContext context, String title, int index) {
     final isSelected = selectedTab == index;
     return Expanded(
       child: GestureDetector(

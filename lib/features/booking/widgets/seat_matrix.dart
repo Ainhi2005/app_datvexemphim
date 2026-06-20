@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/seat.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class SeatMatrix extends StatelessWidget {
   final List<Seat> seats;
@@ -17,7 +18,7 @@ class SeatMatrix extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (seats.isEmpty) {
-      return const Center(child: Text("Sơ đồ phòng chiếu đang trống"));
+      return Center(child: Text(AppLocalizations.of(context)!.booking_seat_map_empty));
     }
 
     final Map<String, List<Seat>> rowGroupedSeats = {};

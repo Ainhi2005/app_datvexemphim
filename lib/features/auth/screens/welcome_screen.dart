@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_strings.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 import '../../../routes/app_routes.dart';
 import '../widgets/auth_button.dart';
 
@@ -10,6 +10,8 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -57,7 +59,7 @@ class WelcomeScreen extends StatelessWidget {
 
               // 2. Nút Đăng nhập
               AuthButton(
-                text: AppStrings.signIn,
+                text: lang.auth_sign_in,
                 onPressed: () {
                   Navigator.pushNamed(context, AppRoutes.login);
                 },
@@ -66,7 +68,7 @@ class WelcomeScreen extends StatelessWidget {
 
               // 3. Nút Đăng ký
               AuthButton(
-                text: AppStrings.signUp,
+                text: lang.auth_sign_up,
                 isOutlined: true,
                 onPressed: () {
                   Navigator.pushNamed(context, AppRoutes.register);

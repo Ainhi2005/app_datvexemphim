@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/rating_provider.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class MovieRatingSection extends StatefulWidget {
   final int movieId;
@@ -47,9 +48,9 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              "Đã hiểu",
-              style: TextStyle(
+            child: Text(
+              AppLocalizations.of(context)!.rating_understood,
+              style: const TextStyle(
                 color: AppColors.secondary,
                 fontWeight: FontWeight.bold,
               ),
@@ -70,28 +71,30 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
 
     double calculatedScore = ratingValue.toDouble();
 
-    final String? errorMessage = await ratingProvider.submitRating(
-      movieId: widget.movieId,
-      score: calculatedScore,
-      review: reviewText.isEmpty ? "Phim rất hay!" : reviewText,
-      token: realUserToken,
-    );
-
-    if (!mounted) return;
-
-    if (errorMessage != null) {
-      _showErrorDialog(context, "Thông báo", errorMessage);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.green,
-          content: Text(
-            "🎉 Cảm ơn bạn đã gửi đánh giá thành công!",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
+      final lang = AppLocalizations.of(context)!;
+      final defaultReview = lang.rating_default_review;
+      final String? errorMessage = await ratingProvider.submitRating(
+        movieId: widget.movieId,
+        score: calculatedScore,
+        review: reviewText.isEmpty ? defaultReview : reviewText,
+        token: realUserToken,
       );
-    }
+
+      if (!mounted) return;
+
+      if (errorMessage != null) {
+        _showErrorDialog(context, lang.rating_error_title, errorMessage);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(
+              lang.rating_success_msg,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        );
+      }
   }
 
   void _showRatingBottomSheet() {
@@ -118,7 +121,7 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text("Đánh giá phim", style: AppTextStyles.headlineMedium),
+                    Text(AppLocalizations.of(context)!.rating_dialog_title, style: AppTextStyles.headlineMedium),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -149,7 +152,7 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
                       style: const TextStyle(color: Colors.white),
                       maxLines: 3,
                       decoration: InputDecoration(
-                        hintText: "Nhập nhận xét của bạn về bộ phim...",
+                        hintText: AppLocalizations.of(context)!.rating_input_hint,
                         hintStyle: const TextStyle(color: Colors.white54),
                         filled: true,
                         fillColor: AppColors.cardColor,
@@ -180,9 +183,9 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
                                   reviewController.text.trim(),
                                 );
                               },
-                        child: const Text(
-                          "Gửi đánh giá",
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context)!.rating_submit_btn,
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -237,8 +240,8 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const Text(
-                      "Đánh giá từ khán giả",
+                    Text(
+                      AppLocalizations.of(context)!.rating_audience_reviews,
                       style: AppTextStyles.titleMedium,
                     ),
                     const SizedBox(height: 16),
@@ -246,7 +249,7 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
                       Expanded(
                         child: Center(
                           child: Text(
-                            "Chưa có đánh giá nào.",
+                            AppLocalizations.of(context)!.rating_no_reviews,
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -312,7 +315,7 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             Text(
-                                              "Đã đánh giá",
+                                              AppLocalizations.of(context)!.rating_already_rated,
                                               style: AppTextStyles.bodyMedium
                                                   .copyWith(
                                                 color: Colors.white54,
@@ -404,7 +407,7 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
                 ),
                 child: Row(
                   children: [
-                    const Text("Review", style: AppTextStyles.titleSmall),
+                    Text(AppLocalizations.of(context)!.rating_review_tab, style: AppTextStyles.titleSmall),
                     const SizedBox(width: 8),
                     const Icon(Icons.star, color: Colors.amber, size: 18),
                     Text(
@@ -435,9 +438,9 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
                 size: 16,
                 color: AppColors.secondary,
               ),
-              label: const Text(
-                "Đánh giá",
-                style: TextStyle(
+              label: Text(
+                AppLocalizations.of(context)!.rating_rate_btn,
+                style: const TextStyle(
                   color: AppColors.secondary,
                   fontWeight: FontWeight.bold,
                 ),

@@ -6,23 +6,16 @@ import '../../auth/providers/auth_provider.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../../../routes/app_routes.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key});
 
-  String _getFormattedDate() {
+  String _getFormattedDate(BuildContext context) {
     final now = DateTime.now();
-    final weekdays = [
-      'Chủ Nhật',
-      'Thứ Hai',
-      'Thứ Ba',
-      'Thứ Tư',
-      'Thứ Năm',
-      'Thứ Sáu',
-      'Thứ Bảy',
-    ];
-    final weekday = weekdays[now.weekday % 7];
-    return '$weekday, ${now.day} tháng ${now.month}';
+    final locale = Localizations.localeOf(context).languageCode;
+    return DateFormat('EEEE, d MMMM', locale).format(now);
   }
 
   void _showLoginRequired(BuildContext context) {
@@ -31,18 +24,18 @@ class HomeHeader extends StatelessWidget {
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Yêu cầu đăng nhập',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          AppLocalizations.of(context)!.common_login_required_title,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'Bạn cần đăng nhập để xem hồ sơ cá nhân.',
-          style: TextStyle(color: Colors.grey),
+        content: Text(
+          AppLocalizations.of(context)!.common_login_required_profile_msg,
+          style: const TextStyle(color: Colors.grey),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+            child: Text(AppLocalizations.of(context)!.common_login_later, style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
@@ -54,9 +47,9 @@ class HomeHeader extends StatelessWidget {
                 (route) => false,
               );
             },
-            child: const Text(
-              'Đăng nhập',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            child: Text(
+              AppLocalizations.of(context)!.common_login,
+              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -66,9 +59,10 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = AppLocalizations.of(context)!;
     final profileProvider = context.watch<ProfileProvider>();
     final user = profileProvider.user;
-    final userName = user?.name ?? 'Khách';
+    final userName = user?.name ?? lang.home_guest;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -81,7 +75,7 @@ class HomeHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _getFormattedDate(),
+                  _getFormattedDate(context),
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: Colors.white60,
                     letterSpacing: 1.2,
@@ -89,7 +83,7 @@ class HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Chào $userName,',
+                  '${lang.home_greeting} $userName,',
                   style: AppTextStyles.headlineLarge.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
@@ -97,7 +91,7 @@ class HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Sẵn sàng xem phim chưa?',
+                  lang.home_ready_to_watch,
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: Colors.white70,
                   ),

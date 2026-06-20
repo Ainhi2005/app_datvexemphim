@@ -3,6 +3,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../providers/payment_provider.dart';
 import '../../main/screens/main_screen.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class PaymentBottomAction extends StatelessWidget {
   final PaymentProvider provider;
@@ -37,7 +38,7 @@ class PaymentBottomAction extends StatelessWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              provider.errorMessage ?? "Lỗi thanh toán. Vui lòng thử lại!",
+                              provider.errorMessage ?? AppLocalizations.of(context)!.payment_error,
                             ),
                             backgroundColor: Colors.red,
                             behavior: SnackBarBehavior.floating,
@@ -58,7 +59,7 @@ class PaymentBottomAction extends StatelessWidget {
                       child: CircularProgressIndicator(color: Colors.black),
                     )
                   : Text(
-                      "Thanh toán  •  ${provider.totalPrice.toInt()} VND",
+                      "${AppLocalizations.of(context)!.payment_pay_btn}  •  ${provider.totalPrice.toInt()} VND",
                       style: AppTextStyles.titleMedium.copyWith(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,

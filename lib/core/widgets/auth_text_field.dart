@@ -5,6 +5,7 @@ import '../constants/app_text_styles.dart';
 class AuthTextField extends StatelessWidget {
   final String hint;
   final IconData prefixIcon;
+  final Widget? suffixIcon;
   final bool obscureText;
   final TextInputType keyboardType;
   final TextEditingController controller;
@@ -14,6 +15,7 @@ class AuthTextField extends StatelessWidget {
     super.key,
     required this.hint,
     required this.prefixIcon,
+    this.suffixIcon,
     required this.controller,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
@@ -36,6 +38,7 @@ class AuthTextField extends StatelessWidget {
           color: AppColors.textSecondary.withValues(alpha: 0.5),
         ),
         prefixIcon: Icon(prefixIcon, color: AppColors.textSecondary),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: AppColors.cardColor,
         border: OutlineInputBorder(

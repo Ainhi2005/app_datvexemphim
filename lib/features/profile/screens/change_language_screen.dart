@@ -1,9 +1,12 @@
 // lib/features/profile/screens/change_language_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/provider/locale_provider.dart';
 import '../widgets/language_option.dart';
 
 class ChangeLanguageScreen extends StatefulWidget {
@@ -14,14 +17,23 @@ class ChangeLanguageScreen extends StatefulWidget {
 }
 
 class _ChangeLanguageScreenState extends State<ChangeLanguageScreen> {
-  String _selectedLanguage = AppStrings.vietnamese;
+  String? _selectedLanguageCode;
 
   @override
   Widget build(BuildContext context) {
+    // 1. Lấy hàm dịch
+    final lang = AppLocalizations.of(context)!;
+    
+    // 2. Lấy provider (không listen để không bị rebuild liên tục khi chọn)
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+
+    // 3. Khởi tạo ngôn ngữ ban đầu đang được chọn
+    _selectedLanguageCode ??= localeProvider.locale.languageCode;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(AppStrings.changeLanguage, style: AppTextStyles.headlineMedium),
+        title: Text(lang.profile_language, style: AppTextStyles.headlineMedium),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -34,17 +46,17 @@ class _ChangeLanguageScreenState extends State<ChangeLanguageScreen> {
         child: Column(
           children: [
             LanguageOption(
-              language: AppStrings.vietnamese,
+              language: 'Tiếng Việt',
               flag: '🇻🇳',
-              isSelected: _selectedLanguage == AppStrings.vietnamese,
-              onTap: () => setState(() => _selectedLanguage = AppStrings.vietnamese),
+              isSelected: _selectedLanguageCode == 'vi',
+              onTap: () => setState(() => _selectedLanguageCode = 'vi'),
             ),
             const SizedBox(height: 16),
             LanguageOption(
-              language: AppStrings.english,
+              language: 'English',
               flag: '🇬🇧',
-              isSelected: _selectedLanguage == AppStrings.english,
-              onTap: () => setState(() => _selectedLanguage = AppStrings.english),
+              isSelected: _selectedLanguageCode == 'en',
+              onTap: () => setState(() => _selectedLanguageCode = 'en'),
             ),
             const Spacer(),
             SizedBox(
@@ -52,7 +64,10 @@ class _ChangeLanguageScreenState extends State<ChangeLanguageScreen> {
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                  SnackbarUtils.showSuccess(context, AppStrings.languageChanged);
+                  // Cập nhật ngôn ngữ qua provider!
+                  localeProvider.setLocale(Locale(_selectedLanguageCode!));
+                  
+                  SnackbarUtils.showSuccess(context, lang.common_success);
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
@@ -60,7 +75,7 @@ class _ChangeLanguageScreenState extends State<ChangeLanguageScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                 ),
                 child: Text(
-                  AppStrings.continueText,
+                  lang.common_confirm,
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.textButton,
                     fontWeight: FontWeight.bold,

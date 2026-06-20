@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../data/models/movie.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 import '../../../routes/app_routes.dart';
 
 class MovieGrid extends StatelessWidget {
@@ -19,7 +20,7 @@ class MovieGrid extends StatelessWidget {
     if (movies.isEmpty) {
       return Center(
         child: Text(
-          isNowPlaying ? 'Không có phim đang chiếu' : 'Không có phim sắp chiếu',
+          isNowPlaying ? AppLocalizations.of(context)!.movie_no_now_playing : AppLocalizations.of(context)!.movie_no_coming_soon,
           style: AppTextStyles.bodyLarge.copyWith(
             color: AppColors.textSecondary,
           ),

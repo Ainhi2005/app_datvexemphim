@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../data/models/showtime.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class TicketPriceTable extends StatelessWidget {
   final Showtime showtime;
@@ -28,7 +29,7 @@ class TicketPriceTable extends StatelessWidget {
         children: [
           _buildTableRow(
             seatWidget: _buildMockSeatUI(width: 34, color: AppColors.surface),
-            typeName: "Ghế thường",
+            typeName: AppLocalizations.of(context)!.booking_seat_standard,
             priceText: "${currencyFormatter.format(showtime.basePrice)} VND",
           ),
           _buildTableRow(
@@ -37,7 +38,7 @@ class TicketPriceTable extends StatelessWidget {
               color: const Color(0xFF3A301E), 
               borderCol: Colors.amber.withValues(alpha: 0.4),
             ),
-            typeName: "Ghế VIP",
+            typeName: AppLocalizations.of(context)!.booking_seat_vip,
             priceText: "${currencyFormatter.format(showtime.vipPrice)} VND",
             isVipText: true,
           ),
@@ -48,7 +49,7 @@ class TicketPriceTable extends StatelessWidget {
               borderCol: Colors.pink.withValues(alpha: 0.4),
               isCouple: true,
             ),
-            typeName: "Ghế đôi (Couple)",
+            typeName: AppLocalizations.of(context)!.booking_seat_couple,
             priceText: "${currencyFormatter.format(showtime.couplePrice)} VND",
             isCoupleText: true,
           ),

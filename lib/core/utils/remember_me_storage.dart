@@ -1,52 +1,40 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RememberMeStorage {
-  static const String _keyRememberMe = 'remember_me';
-  static const String _keyEmail = 'remember_email';
-  static const String _keyPassword = 'remember_password';
+  static const String _keySavedAccounts = 'saved_accounts';
 
-  // Lưu thông tin đăng nhập khi người dùng tích chọn "Nhớ mật khẩu"
-  static Future<void> saveCredentials({
-    required bool rememberMe,
-    required String email,
-    required String password,
-  }) async {
+  // 1. Lấy danh sách tất cả tài khoản đã lưu
+  static Future<List<Map<String, String>>> getSavedAccounts() async {
     final prefs = await SharedPreferences.getInstance();
-    if (rememberMe) {
-      await prefs.setBool(_keyRememberMe, true);
-      await prefs.setString(_keyEmail, email);
-      await prefs.setString(_keyPassword, password);
-    } else {
-      // Nếu không tích chọn nữa thì xóa sạch thông tin cũ
-      await prefs.remove(_keyRememberMe);
-      await prefs.remove(_keyEmail);
-      await prefs.remove(_keyPassword);
-    }
+    final String? accountsString = prefs.getString(_keySavedAccounts);
+    if (accountsString == null || accountsString.isEmpty) return [];
+    
+    // Parse JSON string thành mảng
+    final List<dynamic> decoded = json.decode(accountsString);
+    return decoded.map((e) => Map<String, String>.from(e)).toList();
   }
 
-  // Đọc trạng thái nhớ mật khẩu
-  static Future<bool> isRemembered() async {
+  // 2. Lưu hoặc cập nhật tài khoản (khi ấn Đăng nhập & có tích "Nhớ mật khẩu")
+  static Future<void> saveAccount(String email, String password) async {
+    final accounts = await getSavedAccounts();
+    
+    // Xóa tài khoản này nếu đã tồn tại trong list (để tránh trùng lặp)
+    accounts.removeWhere((acc) => acc['email'] == email);
+    
+    // Chèn tài khoản mới đăng nhập lên ĐẦU danh sách
+    accounts.insert(0, {'email': email, 'password': password});
+    
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyRememberMe) ?? false;
+    await prefs.setString(_keySavedAccounts, json.encode(accounts));
   }
 
-  // Lấy email đã lưu
-  static Future<String?> getSavedEmail() async {
+  // 3. Xóa một tài khoản (khi người dùng bỏ tích "Nhớ mật khẩu" hoặc bấm nút xóa tài khoản trong list)
+  static Future<void> removeAccount(String email) async {
+    final accounts = await getSavedAccounts();
+    accounts.removeWhere((acc) => acc['email'] == email);
+    
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyEmail);
-  }
-
-  // Lấy mật khẩu đã lưu
-  static Future<String?> getSavedPassword() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyPassword);
-  }
-
-  // Xóa sạch thông tin khi người dùng Logout hoàn toàn
-  static Future<void> clearCredentials() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_keyRememberMe);
-    await prefs.remove(_keyEmail);
-    await prefs.remove(_keyPassword);
+    await prefs.setString(_keySavedAccounts, json.encode(accounts));
   }
 }

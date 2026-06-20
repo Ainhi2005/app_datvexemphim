@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../providers/ticket_provider.dart';
+import '../providers/ticket_provider.dart';
 import '../widgets/ticket_card_item.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class TicketListScreen extends StatefulWidget {
   const TicketListScreen({super.key});
@@ -28,7 +30,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          "My ticket",
+          AppLocalizations.of(context)!.ticket_my_tickets,
           style: AppTextStyles.titleLarge.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -47,13 +49,13 @@ class _TicketListScreenState extends State<TicketListScreen> {
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
-                "Có lỗi xảy ra: ${snapshot.error}",
+                "${AppLocalizations.of(context)!.ticket_error_occurred}${snapshot.error}",
                 style: const TextStyle(color: Colors.white),
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text("Bạn chưa có vé nào.", style: TextStyle(color: Colors.white54)),
+            return Center(
+              child: Text(AppLocalizations.of(context)!.ticket_no_tickets, style: const TextStyle(color: Colors.white54)),
             );
           }
 

@@ -3,12 +3,14 @@ import '../../../data/models/movie.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../routes/app_routes.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class MovieSearchDelegate extends SearchDelegate<Movie?> {
   final List<Movie> movies;
+  final String hintText;
 
-  MovieSearchDelegate({required this.movies}) : super(
-    searchFieldLabel: 'Tìm kiếm phim...',
+  MovieSearchDelegate({required this.movies, required this.hintText}) : super(
+    searchFieldLabel: hintText,
     searchFieldStyle: AppTextStyles.bodyLarge.copyWith(color: Colors.white),
   );
 
@@ -51,22 +53,22 @@ class MovieSearchDelegate extends SearchDelegate<Movie?> {
 
   @override
   Widget buildResults(BuildContext context) {
-    return _buildSearchResults();
+    return _buildSearchResults(context);
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return _buildSearchResults();
+    return _buildSearchResults(context);
   }
 
-  Widget _buildSearchResults() {
+  Widget _buildSearchResults(BuildContext context) {
     final filteredMovies = movies.where((movie) {
       return movie.title.toLowerCase().contains(query.toLowerCase());
     }).toList();
 
     if (filteredMovies.isEmpty) {
-      return const Center(
-        child: Text('Không tìm thấy phim nào.', style: TextStyle(color: Colors.white70)),
+      return Center(
+        child: Text(AppLocalizations.of(context)!.search_not_found, style: const TextStyle(color: Colors.white70)),
       );
     }
 

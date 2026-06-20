@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../providers/home_provider.dart';
 import 'search_delegate.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class HomeSearchBar extends StatelessWidget {
   const HomeSearchBar({super.key});
@@ -25,7 +26,7 @@ class HomeSearchBar extends StatelessWidget {
           
           showSearch(
             context: context,
-            delegate: MovieSearchDelegate(movies: uniqueMovies),
+            delegate: MovieSearchDelegate(movies: uniqueMovies, hintText: AppLocalizations.of(context)!.search_hint),
           );
         },
         child: Container(
@@ -44,7 +45,7 @@ class HomeSearchBar extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Tìm kiếm phim, rạp...',
+                AppLocalizations.of(context)!.search_hint,
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: Colors.white54,
                 ),

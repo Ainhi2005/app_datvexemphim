@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import 'package:tet/core/l10n/app_localizations.dart';
 
 class PaymentDiscountCodeBox extends StatelessWidget {
   const PaymentDiscountCodeBox({super.key});
@@ -21,7 +22,7 @@ class PaymentDiscountCodeBox extends StatelessWidget {
           Expanded(
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'discount code',
+                hintText: AppLocalizations.of(context)!.payment_discount_hint,
                 hintStyle: AppTextStyles.bodyMedium,
                 border: InputBorder.none,
                 filled: false,
@@ -37,7 +38,7 @@ class PaymentDiscountCodeBox extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              'Apply',
+              AppLocalizations.of(context)!.payment_apply,
               style: AppTextStyles.button.copyWith(color: Colors.black),
             ),
           ),
