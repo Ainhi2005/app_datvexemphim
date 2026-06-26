@@ -25,6 +25,7 @@ class _MovieScreenState extends State<MovieScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           title: const Text(
             'Movies',
             style: AppTextStyles.headlineMedium,

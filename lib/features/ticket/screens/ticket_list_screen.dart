@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../providers/ticket_provider.dart';
-import '../providers/ticket_provider.dart';
 import '../widgets/ticket_card_item.dart';
 import 'package:tet/core/l10n/app_localizations.dart';
 
@@ -59,7 +58,17 @@ class _TicketListScreenState extends State<TicketListScreen> {
             );
           }
 
-          final tickets = snapshot.data!;
+          final tickets = snapshot.data!.where((t) {
+            final status = t['status']?.toString().toUpperCase() ?? '';
+            return status == 'CONFIRMED' || status == 'SUCCESS';
+          }).toList();
+          
+          if (tickets.isEmpty) {
+            return Center(
+              child: Text(AppLocalizations.of(context)!.ticket_no_tickets, style: const TextStyle(color: Colors.white54)),
+            );
+          }
+
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: tickets.length,

@@ -19,33 +19,43 @@ class TicketDateRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Icon(Icons.calendar_month, color: Colors.black54, size: 28),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(timeStr, style: AppTextStyles.titleMedium.copyWith(color: Colors.black)),
-                Text(dateStr, style: AppTextStyles.bodyMedium.copyWith(color: Colors.black54)),
-              ],
-            ),
-          ],
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.calendar_month, color: Colors.black54, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(timeStr, style: AppTextStyles.titleMedium.copyWith(color: Colors.black)),
+                    Text(dateStr, style: AppTextStyles.bodyMedium.copyWith(color: Colors.black54)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        Row(
-          children: [
-            const Icon(Icons.chair_alt_outlined, color: Colors.black54, size: 28),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(roomNameText, style: AppTextStyles.bodyMedium.copyWith(color: Colors.black54)),
-                Text("${AppLocalizations.of(context)!.payment_seat} $seatsLabel", style: AppTextStyles.titleMedium.copyWith(color: Colors.black)),
-              ],
-            ),
-          ],
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.chair_alt_outlined, color: Colors.black54, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(roomNameText, style: AppTextStyles.bodyMedium.copyWith(color: Colors.black54)),
+                    Text("${AppLocalizations.of(context)!.payment_seat} $seatsLabel", style: AppTextStyles.titleMedium.copyWith(color: Colors.black)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

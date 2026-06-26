@@ -387,7 +387,11 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
 
   @override
   Widget build(BuildContext context) {
-    double displayStars = widget.averageScore;
+    final provider = context.watch<RatingProvider>();
+    
+    // Ưu tiên dùng data từ provider (vừa fetch mới nhất), nếu provider rỗng thì dùng data cũ từ widget
+    final double displayStars = provider.totalRatings > 0 ? provider.averageScore : widget.averageScore;
+    final int displayTotal = provider.totalRatings > 0 ? provider.totalRatings : widget.totalRatings;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,7 +419,7 @@ class _MovieRatingSectionState extends State<MovieRatingSection> {
                       style: AppTextStyles.bodyMedium,
                     ),
                     Text(
-                      " (${widget.totalRatings})",
+                      " ($displayTotal)",
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),

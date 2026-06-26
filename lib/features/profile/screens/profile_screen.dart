@@ -13,6 +13,8 @@ import '../../../core/utils/snackbar_utils.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../ticket/screens/ticket_list_screen.dart';
+import '../../payment/screens/payment_history_screen.dart';
+import '../../main/screens/main_screen.dart';
 import '../../../core/constants/app_text_styles.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -37,19 +39,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: Navigator.canPop(context)
-          ? AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
-            )
-          : null,
       body: SafeArea(
         child: Consumer<ProfileProvider>(
           builder: (context, provider, child) {
+            final authProvider = context.watch<AuthProvider>();
+            
+            if (!authProvider.isAuthenticated) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.account_circle_outlined, size: 100, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Đăng nhập để trải nghiệm",
+                        style: AppTextStyles.titleLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Xem vé đã đặt, lịch sử giao dịch và nhận nhiều ưu đãi hấp dẫn.",
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pushNamed(context, AppRoutes.login),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.secondary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text("Đăng nhập / Đăng ký", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
             if (provider.isLoading && provider.user == null) {
               return const Center(
                 child: CircularProgressIndicator(color: AppColors.secondary),
@@ -84,17 +116,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ProfileMenuItem(
                     icon: Icons.confirmation_num_outlined,
                     title: lang.profile_my_tickets,
-                    onTap: () => Navigator.push(
+                    onTap: () => Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => const TicketListScreen()),
+                      MaterialPageRoute(builder: (context) => const MainScreen(initialIndex: 1)),
+                      (route) => false,
                     ),
                   ),
                   ProfileMenuItem(
                     icon: Icons.shopping_cart_outlined,
                     title: lang.profile_payment_history,
-                    onTap: () => SnackbarUtils.showSuccess(
+                    onTap: () => Navigator.push(
                       context,
-                      'Chức năng lịch sử giao dịch đang được phát triển',
+                      MaterialPageRoute(builder: (context) => const PaymentHistoryScreen()),
                     ),
                   ),
                   ProfileMenuItem(
@@ -124,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           context.read<ProfileProvider>().clearUser();
                           Navigator.pushNamedAndRemoveUntil(
                             context,
-                            AppRoutes.login,
+                            AppRoutes.main,
                             (route) => false,
                           );
                         }

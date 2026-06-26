@@ -56,7 +56,7 @@ class RatingApiService {
         '/movies/$movieId/ratings',
         data: {
           'score': score.toInt(),
-          if (review != null) 'comment': review,
+          if (review != null) 'review': review,
         },
       );
 

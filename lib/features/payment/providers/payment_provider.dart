@@ -15,9 +15,11 @@ class PaymentProvider extends ChangeNotifier {
   String? confirmedOrderId;
   String? generatedQrCode;
   DateTime? showTimeDate;
+  int? currentBookingId;
 
   Future<void> initPayment(BookingSelection userSelection) async {
     selection = userSelection;
+    currentBookingId = null; // Reset booking ID cho phiên thanh toán mới
     isLoading = true;
     showTimeDate = userSelection.showtimeDate ?? DateTime.now();
     notifyListeners();
@@ -43,26 +45,73 @@ class PaymentProvider extends ChangeNotifier {
     return (selection!.seatPrice * selection!.selectedSeatIds.length) + comboTotal;
   }
 
-  Future<bool> processCheckout() async {
-    if (selection == null) return false;
+  Future<int?> initiatePaymentFlow() async {
+    if (selection == null) return null;
     isLoading = true; errorMessage = null; notifyListeners();
     try {
       List<Map<String, dynamic>> comboItems = availableCombos.where((c) => c.quantity > 0).map((c) => {"comboId": c.id, "quantity": c.quantity}).toList();
-      int bookingId = await _repository.createBooking(showtimeId: selection!.showtimeId, seatIds: selection!.selectedSeatIds, comboItems: comboItems);
-      int paymentId = await _repository.initiatePayment(bookingId, selectedMethod);
+      
+      if (currentBookingId == null) {
+        currentBookingId = await _repository.createBooking(showtimeId: selection!.showtimeId, seatIds: selection!.selectedSeatIds, comboItems: comboItems);
+      }
+      
+      int paymentId = await _repository.initiatePayment(currentBookingId!, selectedMethod);
+      isLoading = false; notifyListeners();
+      return paymentId;
+    } catch (e) {
+      isLoading = false; 
+      if (e is DioException && e.response?.data != null && e.response?.data['message'] != null) {
+        errorMessage = e.response!.data['message'].toString();
+      } else {
+        errorMessage = "Lỗi khởi tạo thanh toán. Vui lòng thử lại!"; 
+      }
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<int?> retryPayment(int bookingId, String method) async {
+    isLoading = true; errorMessage = null; notifyListeners();
+    try {
+      int paymentId = await _repository.initiatePayment(bookingId, method);
+      isLoading = false; notifyListeners();
+      return paymentId;
+    } catch (e) {
+      isLoading = false; 
+      if (e is DioException && e.response?.data != null && e.response?.data['message'] != null) {
+        errorMessage = e.response!.data['message'].toString();
+      } else {
+        errorMessage = "Lỗi khởi tạo thanh toán lại."; 
+      }
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> confirmPaymentFlow(int paymentId) async {
+    isLoading = true; notifyListeners();
+    try {
       final confirmData = await _repository.confirmPayment(paymentId);
       confirmedOrderId = confirmData['data']['booking']['id'].toString();
       generatedQrCode = confirmData['data']['ticket']['qrCode'];
       isLoading = false; notifyListeners();
       return true;
     } catch (e) {
-      isLoading = false; 
-      if (e is DioException && e.response?.data != null && e.response?.data['message'] != null) {
-        errorMessage = e.response!.data['message'].toString();
-      } else {
-        errorMessage = "Lỗi thanh toán. Vui lòng thử lại!"; 
-      }
+      isLoading = false;
+      errorMessage = "Xác nhận thanh toán thất bại.";
       notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> failPaymentFlow(int paymentId) async {
+    isLoading = true; notifyListeners();
+    try {
+      await _repository.failPayment(paymentId);
+      isLoading = false; notifyListeners();
+      return true;
+    } catch (e) {
+      isLoading = false; notifyListeners();
       return false;
     }
   }

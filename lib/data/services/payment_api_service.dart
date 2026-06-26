@@ -21,4 +21,6 @@ class PaymentApiService {
   Future<Response> createBooking(Map<String, dynamic> data) async => await _dio.post('/bookings', data: data);
   Future<Response> initiatePayment(Map<String, dynamic> data) async => await _dio.post('/payments', data: data);
   Future<Response> confirmPayment(int paymentId) async => await _dio.post('/payments/$paymentId/confirm');
+  Future<Response> failPayment(int paymentId) async => await _dio.post('/payments/$paymentId/fail');
+  Future<Response> cancelBooking(int bookingId) async => await _dio.patch('/bookings/$bookingId/cancel');
 }

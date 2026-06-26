@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
       title: 'Movie App',
       theme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
-      initialRoute: isAuthenticated ? AppRoutes.main : AppRoutes.welcome, 
+      initialRoute: AppRoutes.main, 
       routes: AppRoutes.routes,
     );
   }

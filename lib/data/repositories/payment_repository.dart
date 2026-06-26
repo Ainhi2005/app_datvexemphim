@@ -23,4 +23,12 @@ class PaymentRepository {
     final response = await _apiService.confirmPayment(paymentId);
     return response.data;
   }
+
+  Future<void> failPayment(int paymentId) async {
+    await _apiService.failPayment(paymentId);
+  }
+
+  Future<void> cancelBooking(int bookingId) async {
+    await _apiService.cancelBooking(bookingId);
+  }
 }

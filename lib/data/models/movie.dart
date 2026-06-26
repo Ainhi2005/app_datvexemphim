@@ -14,6 +14,8 @@ class Movie {
   final String ageRating;
   final String language;
   final DateTime createdAt;
+  final double rating;
+  final int reviewCount;
 
   Movie({
     required this.id,
@@ -29,6 +31,8 @@ class Movie {
     required this.ageRating,
     required this.language,
     required this.createdAt,
+    this.rating = 0.0,
+    this.reviewCount = 0,
   });
 
   factory Movie.fromJson(Map<String, dynamic> json) {
@@ -46,6 +50,8 @@ class Movie {
       ageRating: json['ageRating'] ?? json['age_rating'] ?? '',
       language: json['language'] ?? '',
       createdAt: DateTime.tryParse(json['createdAt'] ?? json['created_at'] ?? '') ?? DateTime.now(),
+      rating: double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0,
+      reviewCount: int.tryParse(json['reviewCount']?.toString() ?? json['review_count']?.toString() ?? '0') ?? 0,
     );
   }
 
@@ -70,16 +76,6 @@ class Movie {
   // Format release date: 2026-04-30 -> "30.04.2026"
   String get formattedReleaseDate {
     return DateFormat('dd.MM.yyyy').format(releaseDate);
-  }
-
-  // Rating tạm thời (có thể bỏ nếu không dùng)
-  double get rating {
-    return 4.0 + (id % 10) / 10;
-  }
-
-  // Review count tạm thời
-  int get reviewCount {
-    return 500 + (id * 50);
   }
 
   // Kiểm tra trạng thái

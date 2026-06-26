@@ -3,6 +3,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../providers/payment_provider.dart';
 import '../../main/screens/main_screen.dart';
+import 'qr_payment_dialog.dart';
 import 'package:tet/core/l10n/app_localizations.dart';
 
 class PaymentBottomAction extends StatelessWidget {
@@ -25,20 +26,22 @@ class PaymentBottomAction extends StatelessWidget {
               onPressed: provider.isLoading
                   ? null
                   : () async {
-                      bool success = await provider.processCheckout();
-                      if (success && context.mounted) {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const MainScreen(initialIndex: 1),
+                      int? paymentId = await provider.initiatePaymentFlow();
+                      if (paymentId != null && context.mounted) {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) => QRPaymentDialog(
+                            provider: provider,
+                            paymentId: paymentId,
+                            amount: provider.totalPrice,
                           ),
-                          (route) => false,
                         );
-                      } else if (context.mounted) {
+                      } else if (context.mounted && provider.errorMessage != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              provider.errorMessage ?? AppLocalizations.of(context)!.payment_error,
+                              provider.errorMessage!,
                             ),
                             backgroundColor: Colors.red,
                             behavior: SnackBarBehavior.floating,

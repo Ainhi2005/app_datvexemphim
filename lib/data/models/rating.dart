@@ -24,7 +24,7 @@ class Rating {
       id: json['id'] ?? 0,
       userId: json['userId'] ?? json['user_id'] ?? 0,
       movieId: json['movieId'] ?? json['movie_id'] ?? 0,
-      score: (json['score'] ?? 0).toDouble(),
+      score: double.tryParse(json['score']?.toString() ?? '0') ?? 0.0,
       review: json['comment'] ?? json['review'],
       createdAt: DateTime.parse(json['createdAt'] ?? json['created_at'] ?? DateTime.now().toIso8601String()),
       userName: json['userName'] ?? json['user_name'] ?? 'Ẩn danh',
