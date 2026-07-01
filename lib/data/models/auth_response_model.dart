@@ -16,8 +16,8 @@ class AuthResponseModel {
     String refToken = '';
 
     if (dataBlock is Map<String, dynamic>) {
-      // Hỗ trợ cả trường hợp server trả về key là 'token' hoặc 'accessToken'
-      accToken = dataBlock['token'] ?? dataBlock['accessToken'] ?? '';
+      
+      accToken = dataBlock['token'] ?? '';
       refToken = dataBlock['refreshToken'] ?? '';
     }
 
