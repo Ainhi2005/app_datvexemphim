@@ -70,8 +70,3 @@ lib/
  ┃ ┗ ticket/                 # Quản lý vé đã đặt
  ┣ core/                     # Utils, Constants, Themes dùng chung
  ┗ main.dart                 # Điểm bắt đầu (Entry point) của ứng dụng
-
-
-
-
-
