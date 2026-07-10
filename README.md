@@ -70,15 +70,3 @@ lib/
  ┃ ┗ ticket/                 # Quản lý vé đã đặt
  ┣ core/                     # Utils, Constants, Themes dùng chung
  ┗ main.dart                 # Điểm bắt đầu (Entry point) của ứng dụng
-
-<img width="381" height="811" alt="image" src="https://github.com/user-attachments/assets/783e4d28-d137-4633-9721-a6452394af47" />
-<img width="382" height="820" alt="image" src="https://github.com/user-attachments/assets/b8ec4049-e7bd-40b0-aac7-e1a423618134" />
-<img width="380" height="818" alt="image" src="https://github.com/user-attachments/assets/2cf7f8cc-0a8c-4dcb-9a51-ed0dd2f84ac5" />
-<img width="397" height="822" alt="image" src="https://github.com/user-attachments/assets/c1e376c0-5462-4379-937f-dfbdf29c8396" />
-<img width="393" height="821" alt="image" src="https://github.com/user-attachments/assets/d4f5f8c4-435e-41d7-a671-663a03193100" />
-<img width="401" height="827" alt="image" src="https://github.com/user-attachments/assets/c70daf42-74a7-4893-9a05-16cbb0d31395" />
-<img width="382" height="827" alt="image" src="https://github.com/user-attachments/assets/0fa46f43-cf19-4bba-8051-0d6ef9b9425e" />
-<img width="395" height="832" alt="image" src="https://github.com/user-attachments/assets/042d81e1-8bb8-42f6-bf52-9959447fab13" />
-<img width="408" height="838" alt="image" src="https://github.com/user-attachments/assets/0d9b6218-5749-4605-ac28-136b5edd7ce5" />
-<img width="402" height="827" alt="image" src="https://github.com/user-attachments/assets/34aa3454-2784-4e9d-8400-3cd3cc82afa7" />
-
